@@ -1,0 +1,16 @@
+de4eeb4341d12ec20017c1a9d50bcfe4 *ChangeLog
+a0bf39f01b35a0cce08be49264860a94 *DESCRIPTION
+439452fbf9cf9a910757f11265281bef *NAMESPACE
+ae6e4ef53d3e2826628a09588faf6340 *NEWS
+fa0aba8ae167f8d844f07f4dc540a90a *NEWS.md
+dad6bb7692757e74ec60a1be8ac78825 *R/heatmaply.R
+3aecdd69d6975c0ed0abb2ec03b7ec2f *R/heatmapr.R
+006d667a6143a6fb648f35b0bb06fbbf *R/zzz.R
+6c77ba0692c8e3028e3e284e2a2653f7 *README.md
+5958bcb8426afdcfe2dc229d8137c9ce *build/vignette.rds
+bd279083c51e178b491f4a1cdb063f69 *inst/doc/heatmaply.R
+b91e84564ead7af8a0b8dcb5c278a86f *inst/doc/heatmaply.Rmd
+be770ab89b916e8c647ae4d5b8bb5c77 *inst/doc/heatmaply.html
+3193055232415826bfe46bb8b732c1d4 *man/heatmaply.Rd
+ef34b5ea8a724a6e9f6541283d4d2d08 *man/heatmapr.Rd
+b91e84564ead7af8a0b8dcb5c278a86f *vignettes/heatmaply.Rmd

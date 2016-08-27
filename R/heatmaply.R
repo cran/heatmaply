@@ -18,14 +18,10 @@
 #' @param colors a vector of colors to use for heatmap color.
 #' The default uses \code{\link[viridis]{viridis}(n=256, alpha = 1, begin = 0, end = 1, option = "viridis")}
 #' It is passed to \link[ggplot2]{scale_fill_gradientn}.
+#' If colors is a color function (with the first argument being `n` = the number of colors),
+#' it will be used to create 256 colors from that function.
 #' @param limits a two dimensional numeric vector specifying the data range for the scale.
 #' @param na.value color to use for missing values (default is "grey50").
-#' @param scale_fill_gradient_fun A function that creates a smooth gradient for the heatmap.
-#' The default uses \link[ggplot2]{scale_fill_gradientn} with the values of colors, limits, and
-#' na.value that are supplied by the user. The user can input a customized function, such as
-#' \link{scale_colour_gradient}() in order to get other results (although the virids default
-#' is quite recommended)
-#'
 #'
 #' @param row_text_angle numeric (Default is 0), the angle of the text of the rows. (this is called srtRow in \link[gplots]{heatmap.2})
 #' @param column_text_angle numeric (Default is 45), the angle of the text of the columns. (this is called srtCol in \link[gplots]{heatmap.2})
@@ -42,8 +38,31 @@
 #'
 #' @param ... other parameters passed to \link{heatmapr} (currently, various parameters may be ignored.
 #'
+#' @param scale_fill_gradient_fun A function that creates a smooth gradient for the heatmap.
+#' The default uses \link[ggplot2]{scale_fill_gradientn} with the values of colors, limits, and
+#' na.value that are supplied by the user. The user can input a customized function, such as
+#' \link{scale_colour_gradient}() in order to get other results (although the virids default
+#' is quite recommended)
+#'
+#' @param grid_color control the color of the heatmap grid. Default is NA. Value passed to \link[ggplot2]{geom_tile}.
+#' This parameter is currently not working until this is added in plotly.
+#'
 #' @param srtRow if supplied, this overrides row_text_angle (this is to stay compatible with \link[gplots]{heatmap.2})
 #' @param srtCol if supplied, this overrides column_text_angle (this is to stay compatible with \link[gplots]{heatmap.2})
+#'
+#' @param xlab A character title for the x axis.
+#' @param ylab A character title for the y axis.
+#'
+#' @param titleX logical (TRUE). should x-axis titles be retained? (passed to \link[plotly]{subplot}).
+#' @param titleY logical (TRUE). should y-axis titles be retained? (passed to \link[plotly]{subplot}).
+#'
+#' @param hide_colorbar logical (FALSE). If TRUE, then the color bar is hidden.
+#'
+#' @param key.title (character) main title of the color key. If set to NULL (default) no title will be plotted.
+#'
+#' @param return_ppxpy logical (FALSE). If TRUE, then no plotting is done and the p, px and py objects are
+#' returned (before turning into plotly objects). This is a temporary option which might be removed in the
+#' future just to make it easy to create a ggplot heatmaps.
 #'
 #' Please submit an issue on github if you have a feature that you wish to have added)
 #' @aliases
@@ -77,6 +96,29 @@
 #' # using special scale_fill_gradient_fun colors
 #' heatmaply(x, scale_fill_gradient_fun = scale_colour_gradient())
 #'
+#'
+#' # We can join two heatmaps together:
+#' library(heatmaply)
+#' hm1 <- heatmaply(mtcars) %>% layout(margin = list(l = 130, b = 40))
+#' hm2 <- heatmaply(mtcars, scale = "col") %>% layout(margin = list(l = 130, b = 40))
+#' subplot(hm1, hm2, margin = .2)
+#'
+#' # If we want to share the Y axis, then it is risky to keep any of the dendrograms:
+#' library(heatmaply)
+#' hm1 <- heatmaply(mtcars, Colv = FALSE, Rowv = FALSE) %>%
+#'    layout(margin = list(l = 130, b = 40))
+#' hm2 <- heatmaply(mtcars, scale = "col" , Colv = FALSE, Rowv = FALSE) %>%
+#'    layout(margin = list(l = 130, b = 40))
+#' subplot(hm1, hm2, margin = .02, shareY = TRUE)
+#'
+#' # We can save heatmaply as a widget by using:
+#' library(heatmaply)
+#' library(htmlwidgets)
+#' heatmaply(iris[,-5]) %>%
+#'    saveWidget(file="test.html",selfcontained = FALSE)
+#'
+#'
+#'
 #' }
 heatmaply <- function(x,
                       # elements for scale_fill_gradientn
@@ -88,12 +130,17 @@ heatmaply <- function(x,
                       column_text_angle = 45,
                       margin = 0,
                       row_dend_left = FALSE,
-
                       ...,
-                      scale_fill_gradient_fun =
-                        scale_fill_gradientn(colors = colors,
+                      scale_fill_gradient_fun = scale_fill_gradientn(
+                          colors = if(is.function(colors)) colors(256) else colors,
                                              na.value = na.value, limits = limits),
-                      srtRow, srtCol
+                      grid_color = NA,
+                      srtRow, srtCol,
+                      xlab = "", ylab = "",
+                      titleX = TRUE, titleY = TRUE,
+                      hide_colorbar = FALSE,
+                      key.title = NULL,
+                      return_ppxpy = FALSE
 
                       ) {
   UseMethod("heatmaply")
@@ -112,10 +159,16 @@ heatmaply.default <- function(x,
                               margin = 0,
                               row_dend_left = FALSE,
                               ...,
-                              scale_fill_gradient_fun =
-                                scale_fill_gradientn(colors = colors,
-                                                     na.value = na.value, limits = limits),
-                              srtRow, srtCol
+                              scale_fill_gradient_fun = scale_fill_gradientn(
+                                colors = if(is.function(colors)) colors(256) else colors,
+                                na.value = na.value, limits = limits),
+                              grid_color = NA,
+                              srtRow, srtCol,
+                              xlab = "", ylab = "",
+                              titleX = TRUE, titleY = TRUE,
+                              hide_colorbar = FALSE,
+                              key.title = NULL,
+                              return_ppxpy = FALSE
 
                               ) {
 
@@ -126,18 +179,101 @@ heatmaply.default <- function(x,
   hm <- heatmapr(x, ...)
   heatmaply.heatmapr(hm, # colors = colors, limits = limits,
                      scale_fill_gradient_fun = scale_fill_gradient_fun,
+                     grid_color = grid_color,
                      row_text_angle = row_text_angle,
                      column_text_angle = column_text_angle,
                      margin = margin,
-                     row_dend_left = row_dend_left) # TODO: think more on what should be passed in "..."
+                     row_dend_left = row_dend_left,
+                     xlab=xlab, ylab=ylab,
+                     titleX = titleX, titleY = titleY,
+                     hide_colorbar = hide_colorbar,
+                     key.title = key.title,
+                     return_ppxpy = return_ppxpy
+                     ) # TODO: think more on what should be passed in "..."
 }
 
 
 
+# xx is a data matrix
+ggplot_heatmap <- function(xx,
+                           row_text_angle = 0,
+                           column_text_angle = 45,
+                           scale_fill_gradient_fun =
+                             scale_fill_gradientn(colors = viridis(n=256, alpha = 1, begin = 0,
+                                                                   end = 1, option = "viridis"),
+                                                  na.value = "grey50", limits = NULL),
+                           grid_color = NA,
+                           grid_size = 0.1,
+                           key.title = NULL,
+                           ...) {
+
+  theme_clear_grid_heatmap <- theme(axis.line = element_line(colour = "black"),
+                                    panel.grid.major = element_blank(),
+                                    panel.grid.minor = element_blank(),
+                                    panel.border = element_blank(),
+                                    panel.background = element_blank())
 
 
+  # heatmap
+  # xx <- x$matrix$data
+  df <- as.data.frame(xx)
+  # colnames(df) <- x$matrix$cols
+  df$row <- if(!is.null(rownames(xx)))
+              {rownames(xx)} else
+              {1:nrow(xx)}
+
+
+  df$row <- with(df, factor(row, levels=row, ordered=TRUE))
+  mdf <- reshape2::melt(df, id.vars="row")
+  colnames(mdf)[2] <- "column" # rename "variable"
+
+  # TODO:
+  # http://stackoverflow.com/questions/15921799/draw-lines-around-specific-areas-in-geom-tile
+
+
+  # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
+  p <- ggplot(mdf, aes_string(x = "column", y = "row")) +
+    geom_tile(aes_string(fill = "value"), color = grid_color, size = grid_size) +
+    # scale_linetype_identity() +
+    # scale_fill_viridis() +
+    coord_cartesian(expand = FALSE) +
+    scale_fill_gradient_fun +
+    theme_bw()+ theme_clear_grid_heatmap +
+    theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1),
+          axis.text.y = element_text(angle = row_text_angle, hjust = 1)
+          )
+  # p <- p + scale_x_discrete(limits = unique(mdf))
+
+  # http://stats.stackexchange.com/questions/5007/how-can-i-change-the-title-of-a-legend-in-ggplot2
+  p <- p + labs(fill=key.title)
+
+  p
+}
+#
+# library(ggplot2)
+# library(plotly)
+# # library(heatmaply)
+# ggplot_heatmap <- heatmaply:::ggplot_heatmap
+# class_to <- function(x, new_class) {
+#   class(x) <- new_class
+#   x
+# }
+# na_mat <- function(x) {
+#   x %>% is.na %>% class_to("numeric")
+# }
+#
+# p <- heatmaply:::ggplot_heatmap(na_mat(airquality),
+#                     scale_fill_gradient_fun = scale_fill_gradientn(colors= c("white","black")) ,
+#                     grid_color = "grey", grid_size = 1)
+# plot(p)
+# ggplotly(p)
+# p <- ggplot_heatmap(mtcars,
+#                     grid_color = white")
+# p
+#
 
 heatmap_subplot_from_ggplotly <- function(p, px, py, top_corner, row_dend_left, margin = 0,
+                                          titleX = TRUE, titleY = TRUE,
                                           widths = c(.8,.2), heights = c(.2,.8), ...) {
 
   # make different plots based on which dendrogram we have
@@ -150,12 +286,12 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, top_corner, row_dend_left, 
     if(row_dend_left) {
       s <- subplot(top_corner, py, px, p, nrows = 2,
                    widths = rev(widths), heights = heights, margin = margin,
-                   shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+                   shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
     } else {
       # row dend on the right side
       s <- subplot(py, top_corner, p, px, nrows = 2,
                    widths = widths, heights = heights, margin = margin,
-                   shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+                   shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
     }
 
   } else {
@@ -169,7 +305,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, top_corner, row_dend_left, 
       # then px is NULL
       s <- subplot(py, p, nrows = 2,
                    heights = heights, margin = margin,
-                   shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+                   shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
     }
 
     if(!is.null(px)) {
@@ -177,12 +313,12 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, top_corner, row_dend_left, 
       if(row_dend_left) {
         s <- subplot(px, p, nrows = 1,
                      widths = rev(widths), margin = margin,
-                     shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+                     shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
       } else {
         # row dend on the right side
         s <- subplot(p, px, nrows = 1,
                      widths = widths, margin = margin,
-                     shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+                     shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
       }
     }
 
@@ -215,10 +351,16 @@ heatmaply.heatmapr <- function(x,
 
                                row_dend_left = FALSE,
                                ...,
-                               scale_fill_gradient_fun =
-                                 scale_fill_gradientn(colors = colors,
-                                                      na.value = na.value, limits = limits),
-                               srtRow, srtCol
+                               scale_fill_gradient_fun = scale_fill_gradientn(
+                                 colors = if(is.function(colors)) colors(256) else colors,
+                                 na.value = na.value, limits = limits),
+                               grid_color = NA,
+                               srtRow, srtCol,
+                               xlab = "", ylab = "",
+                               titleX = TRUE, titleY = TRUE,
+                               hide_colorbar = FALSE,
+                               key.title = NULL,
+                               return_ppxpy = FALSE
 
                                ) {
 
@@ -244,11 +386,6 @@ heatmaply.heatmapr <- function(x,
 
   # x <- heatmapr(mtcars)
 
-  theme_clear_grid_heatmap <- theme(axis.line = element_line(colour = "black"),
-                            panel.grid.major = element_blank(),
-                            panel.grid.minor = element_blank(),
-                            panel.border = element_blank(),
-                            panel.background = element_blank())
 
   # source: http://stackoverflow.com/questions/6528180/ggplot2-plot-without-axes-legends-etc
   theme_clear_grid_dends <- theme(axis.line=element_blank(),axis.text.x=element_blank(),
@@ -270,7 +407,6 @@ heatmaply.heatmapr <- function(x,
     py <- ggplot(cols, labels  = FALSE) + theme_bw() +
       coord_cartesian(expand = FALSE) +
       theme_clear_grid_dends
-    py <- ggplotly(py, tooltip = "")
   }
 
 
@@ -281,32 +417,53 @@ heatmaply.heatmapr <- function(x,
       # coord_cartesian(expand = FALSE) +
       coord_flip(expand = FALSE) + theme_bw() + theme_clear_grid_dends
     if(row_dend_left) px <- px + scale_y_reverse()
-    px <- ggplotly(px, tooltip = "")
+  }
+
+
+  # create the heatmap
+
+  data_mat <- x$matrix$data
+  p <- ggplot_heatmap(data_mat,
+                      row_text_angle,
+                      column_text_angle,
+                      scale_fill_gradient_fun,
+                      grid_color,
+                      key.title = key.title)
+
+
+  if(return_ppxpy) {
+    return(list(p=p, px=px, py=py))
   }
 
 
 
-
-  # heatmap
-  xx <- x$matrix$data
-  df <- as.data.frame(xx)
-  colnames(df) <- x$matrix$cols
-  df$row <- x$matrix$rows
-  df$row <- with(df, factor(row, levels=row, ordered=TRUE))
-  mdf <- reshape2::melt(df, id.vars="row")
-  colnames(mdf)[2] <- "column" # rename "variable"
-
-  # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-  p <- ggplot(mdf, aes_string(x = "column", y = "row")) + geom_tile(aes_string(fill = "value")) +
-    # scale_fill_viridis() +
-    coord_cartesian(expand = FALSE) +
-    scale_fill_gradient_fun +
-    theme_bw()+ theme_clear_grid_heatmap +
-    theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1),
-          axis.text.y = element_text(angle = row_text_angle, hjust = 1)
-          )
-
+  ## plotly:
+  # turn p, px, and py to plotly objects
   p <- ggplotly(p)
+  if(!is.null(px)) px <- ggplotly(px, tooltip = "y")
+  if(!is.null(py)) py <- ggplotly(py, tooltip = "y")
+
+
+
+
+  # https://plot.ly/r/reference/#Layout_and_layout_style_objects
+  p <- layout(p,              # all of layout's properties: /r/reference/#layout
+              # title = "unemployment", # layout's title: /r/reference/#layout-title
+              xaxis = list(           # layout's xaxis is a named list. List of valid keys: /r/reference/#layout-xaxis
+                title = xlab     # xaxis's title: /r/reference/#layout-xaxis-title
+                # showgrid = T        # xaxis's showgrid: /r/reference/#layout-xaxis-showgrid
+              ),
+              yaxis = list(           # layout's yaxis is a named list. List of valid keys: /r/reference/#layout-yaxis
+                title = ylab      # yaxis's title: /r/reference/#layout-yaxis-title
+              ))
+
+
+  if(hide_colorbar) {
+    p <- hide_colorbar(p)
+    # px <- hide_colorbar(px)
+    # py <- hide_colorbar(py)
+
+    }
 
   # TODO: this doesn't work because of the allignment. But using this might
   # speedup the code to deal with MUCH larger matrices.
@@ -342,11 +499,14 @@ heatmaply.heatmapr <- function(x,
   # top_corner <- ggplotly(qplot(as.numeric(xx), geom="histogram"))
 
   # create the subplot
-  heatmap_subplot <- heatmap_subplot_from_ggplotly(p, px, py, top_corner, row_dend_left, margin)
+  heatmap_subplot <- heatmap_subplot_from_ggplotly(p, px, py, top_corner, row_dend_left, margin,
+                                                   titleX = titleX, titleY = titleY)
 
 
 
   l <- layout(heatmap_subplot, showlegend = FALSE)
+
+
 
   # print(l)
   l
@@ -419,9 +579,12 @@ if(FALSE) {
   #          yaxis = eaxis)
 
   s <- subplot(px, plotly_empty(), p, py, nrows = 2, widths = c(.8,.2), heights = c(.2,.8), margin = 0,
-               shareX = TRUE, shareY = TRUE, titleX = FALSE, titleY = FALSE)
+               shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
 
   layout(s, showlegend = FALSE)
 
 
 }
+
+
+

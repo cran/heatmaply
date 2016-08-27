@@ -1,8 +1,68 @@
+heatmaply 0.5.0 (2016-08-04)
+==============================
+
+### NEW FEATURES
+* is.heatmapr
+* ggheatmap - first try. (not working well enough yet. The proportions of the elements are not good)
+* heatmaply
+  * key.title - a parameter to control the main title of the color key. (feature request by John Rizk)
+
+
+
+heatmaply 0.4.0 (2016-07-15)
+==============================
+
+### NEW FEATURES
+* heatmaply
+  * grid_color - control the color of the heatmap grid. This is currently not working until this feature will be added by plotly.
+  * hover over dendrogram now returns the height.
+  * colors can now also accept a function (and will use it to produce 256 colors)
+* heatmapr
+  * seriate - character indicating the method of matrix sorting (default: "OLO"). This uses the seriation package.
+  * srtRow, srtCol - add legacy support for these parameters (they are passed to row_text_angle and column_text_angle)
+  * hide_colorbar - controls if the color bar should be hidden.
+  * xlab, ylab - add titles to the x and y axis.
+
+
+heatmaply 0.3.2 (2016-05-26)
+==============================
+
+### ANNOUNCMENTS
+* heatmaply 0.3.2 - first CRAN release!
+
+### BUG FIXES
+* http -> https
+
+heatmaply 0.3.1 (2016-05-26)
+==============================
+### BUG FIXES
+* fix minor typos.
+
+heatmaply 0.3.0 (2016-05-25)
+==============================
+
+
+### NEW FEATURES
+* heatmaply
+  * Now works with Rowv=F and Colv=F (by introducing a new un-exported function: heatmap_subplot_from_ggplotly)
+  * Remove space between the heatmap and dendrograms (via: coord_cartesian(expand = FALSE)  and coord_flip(expand = FALSE))
+  * Added the margin parameter (to control the distance between the heatmap and the dendrograms.)
+  * Added row_text_angle and column_text_angle (with srtRow and srtCol for backward compatibility with gplots::heatmap.2). Fix #3
+
+### BUG FIXES
+* fix #2 : Error: Don't know how to add scale_fill_gradient_fun to a plot
+  by moving "scale_fill_gradient_fun" after "..." (I may change this parameter's name later)
+
+
+### VIGNETTE
+* heatmaply now has a basic vignette.
+
+
 heatmaply 0.2.1 (2016-05-23)
 ==============================
 
 ### BUG FIXES
-* fix various import issues that caused warnings with devtools::
+* fix various import issues that caused warnings with devtools::check()
 
 
 heatmaply 0.2.0 (2016-05-23)
@@ -26,9 +86,59 @@ heatmaply 0.1.0 (2016-05-14)
 
 TODO:
 ==============================
-* fix side labels
 * add bars for extra categories
-* remove hover information from dendrograms
 * remove unneeded code from d3heatmap
-* fix docs!
 * add many options for controlling the heatmap "as it should be"
+* implement all relevant options streight to heatmaply.
+* ggheatmap?
+* Expose widths and heights from heatmap_subplot_from_ggplotly to heatmaply
+
+* create colors from RcolorBrewer
+* write example for using seriation+dendextend for heatmaps.
+
+* add seriation to imports
+* Show the following example for using seriation:
+
+
+
+require(seriation)
+require(dendextend)
+# "GW", "OLO"
+d <- dist(USArrests[1:15,])
+dend <- as.dendrogram(hclust(d, method = "ave"))
+par(mfrow = c(1,2))
+plot(dend, main = "default")
+# seriate(cophenetic(dend), method = "OLO", control = list(hclust = as.hclust(dend)))
+# the downside in using cophenetic is that seriate has to go through running hclust all over again
+# but we'll just have to accept it...
+o <- seriate(d, method = "GW", control = list(hclust = as.hclust(dend)) )
+get_order(o)
+labels(cophenetic(dend))[get_order(o)]
+d2 <- rotate(dend, order = rev(labels(d)[get_order(o)]))
+plot(d2, main = "GW")
+
+o <- seriate(d, method = "OLO", control = list(hclust = as.hclust(dend)) )
+d3 <- rotate(dend, order = rev(labels(d)[get_order(o)]))
+
+require(heatmaply)
+heatmaply(USArrests[1:15,], Rowv = d2)
+heatmaply(USArrests[1:15,], Rowv = d3)
+heatmaply(USArrests[1:15,], Rowv = dend)
+
+hmap(USArrests[1:15,])
+
+
+
+identical(seriate(d, method = "OLO"),
+		seriate(d, method = "OLO", control = list(hclust = as.hclust(dend)) ))
+get_order(seriate(d, method = "OLO"))
+get_order(seriate(d, method = "OLO", control = list(hclust = hclust(d, method = "sing")) )) # this works :)
+
+
+
+
+
+
+
+
+

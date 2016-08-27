@@ -39,7 +39,7 @@ A heatmap is a popular graphical method for visualizing high-dimensional data, i
 
 Interactive heatmaps allow the inspection of specific value by hovering the mouse over a cell, as well as zooming into a region of the heatmap by draging a rectangle around the relevant area.
 
-This work is based on the ggplot2 and plotly.js engine. It produces similar heatmaps as d3heatmap, with the advatange of speed (plotly.js is able to handle larger size matrix), and the ability to zoom from the dendrogram.
+This work is based on the ggplot2 and plotly.js engine. It produces similar heatmaps as d3heatmap, with the advantage of speed (plotly.js is able to handle larger size matrix), and the ability to zoom from the dendrogram.
 
 
 Installation
@@ -47,8 +47,8 @@ Installation
 
 To install the stable version on CRAN:
 
-```r
-# install.packages('heatmaply')
+```{r, eval = FALSE}
+install.packages('heatmaply')
 ```
 
 To install the GitHub version:
@@ -76,6 +76,8 @@ Usage
 ======
 
 
+Default
+-------------
 
 ```{r}
 library(heatmaply)
@@ -98,7 +100,57 @@ heatmaply(cor(mtcars),
 ```
 
 
-We can use different colors:
+Various setiation options
+-------------------
+
+heatmaply uses the `seriation` package to find optimal ordering of rows and columns. Optimal means to optimze the Hamiltonian path length that is restricted by the dendrogram structure. Which, in other words, means to rotate the branches so that the sum of distances between each adjacent leaf (label) will be minimized. This is related to a restricted version of the travel salesman problem. The default options is "OLO" (Optimal leaf ordering) which optimizes the above mention critirion (it works in O(n^4)). Another option is "GW" (Gruvaeus and Wainer) which aims for the same goal but uses a (faster?) heuristic. The option "mean" gives the output we would get by default from heatmap functions in other packages such as `gplots::heatmap.2`. The option "none" gives us the dendrograms without any rotation. 
+
+```{r}
+# The default of heatmaply:
+heatmaply(mtcars[1:10,], seriate = "OLO") %>% layout(margin = list(l = 130, b = 40))
+```
+
+```{r}
+# Similar to OLO but less optimal (since it is a heuristic)
+heatmaply(mtcars[1:10,], seriate = "GW") %>% layout(margin = list(l = 130, b = 40))
+```
+
+```{r}
+# the default by gplots::heatmaply.2
+heatmaply(mtcars[1:10,], seriate = "mean") %>% layout(margin = list(l = 130, b = 40))
+```
+
+```{r}
+# the default output from hclust
+heatmaply(mtcars[1:10,], seriate = "none") %>% layout(margin = list(l = 130, b = 40))
+```
+
+This works heavily relies on the seriation package (their [vignette](https://cran.r-project.org/web/packages/seriation/vignettes/seriation.pdf) is well worth the read), and also lightly on the dendextend package (see [vignette](https://cran.r-project.org/web/packages/dendextend/vignettes/introduction.html))
+
+Changing color palettes
+-------------------
+
+We can use different colors than the default `viridis`. For example, we may want to use other color pallates in order to get divergent colors for the correlations (these will sadly be less friendly for color blind people):
+
+```{r}
+# divergent_viridis_magma <- c(rev(viridis(100, begin = 0.3)), magma(100, begin = 0.3))
+# rwb <- colorRampPalette(colors = c("darkred", "white", "darkgreen"))
+library(RColorBrewer)
+# display.brewer.pal(11, "BrBG")
+BrBG <- colorRampPalette(brewer.pal(11, "BrBG"))
+Spectral <- colorRampPalette(brewer.pal(11, "Spectral"))
+
+heatmaply(cor(mtcars), 
+          k_col = 2, k_row = 2,
+          colors = BrBG(256),
+          limits = c(-1,1)) %>% 
+  layout(margin = list(l = 40, b = 40))
+
+```
+
+
+Another example for using colors:
+
 
 ```{r}
 heatmaply(mtcars, colors = heat.colors(100))
@@ -112,6 +164,30 @@ heatmaply(mtcars,
 
 ```
 
+Missing values
+---------------
+
+Reviewing missing values:
+
+```{r}
+
+library(heatmaply)
+class_to <- function(x, new_class) {
+  class(x) <- new_class
+  x
+}
+na_mat <- function(x) {
+  x %>% is.na %>% class_to("numeric") 
+}
+
+
+airquality %>% na_mat %>% 
+  heatmaply(color = c("white","black"), grid_color = "grey",
+            k_col =3, k_row = 3) %>% 
+  layout(margin = list(l = 40, b = 50))
+
+
+```
 
 
 

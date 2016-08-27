@@ -1,3 +1,4 @@
+
 [![Build Status](https://travis-ci.org/talgalili/heatmaply.png?branch=master)](https://travis-ci.org/talgalili/heatmaply)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/heatmaply)](https://cran.r-project.org/package=heatmaply)
 ![](http://cranlogs.r-pkg.org/badges/heatmaply?color=yellow)
@@ -18,6 +19,11 @@
 
 This package is still under active development. If you have features you would like to have added, please submit your suggestions (and bug-reports) at: <https://github.com/talgalili/heatmaply/issues>
 
+## Screenshot demo
+
+![](http://i.imgur.com/qdUCKlg.gif)
+
+
 
 ## Introduction
 
@@ -33,7 +39,7 @@ This work is based on the ggplot2 and plotly.js engine. It produces similar heat
 To install the stable version on CRAN:
 
 ```r
-# install.packages('heatmaply') # not on CRAN yet, please install using devtools. See the next code chunk for the code
+install.packages('heatmaply')
 ```
 
 To install the latest ("cutting-edge") GitHub version run:
@@ -57,15 +63,15 @@ library("heatmaply")
 
 ## Usage
 
+Quick example:
+
 ```r
-
-# mtcars
-# x <- heatmapr(mtcars)
 library(heatmaply)
-heatmaply(iris[,-5], k_row = 3, k_col = 2)
 heatmaply(mtcars, k_row = 3, k_col = 2)
-
 ```
+
+**For more (interactive) examples see the [online vignette on CRAN](https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html)**
+
 
 
 ## Credit

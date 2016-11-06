@@ -72,6 +72,11 @@
 #' @param labRow character vectors with row labels to use (from top to bottom); default to rownames(x).
 #' @param labCol character vectors with column labels to use (from left to right); default to colnames(x).
 #'
+#' @param row_side_colors,col_side_colors data.frame of factors to produce
+#'    row/column side colors in the style of heatmap.2/heatmap.3.
+#'    col_side_colors should be "wide", ie be the same dimensions
+#'    as the column side colors it will produce.
+#'
 #' @param seriate character indicating the method of matrix sorting (default: "OLO").
 #' Implemented options include:
 #' "OLO" (Optimal leaf ordering, optimzes the Hamiltonian path length that is restricted by the dendrogram structure - works in O(n^4) )
@@ -136,7 +141,9 @@ heatmapr <- function(x,
                       show_grid = TRUE,
                       anim_duration = 500,
 
-                     seriate = c("OLO", "mean", "none", "GW"),
+                      row_side_colors = NULL,
+                      col_side_colors = NULL,
+                      seriate = c("OLO", "mean", "none", "GW"),
 
                       ...
 ) {
@@ -226,7 +233,7 @@ heatmapr <- function(x,
   }
   if (is.numeric(Rowv)) {
     Rowv <- reorderfun(as.dendrogram(hclustfun(distfun(x))), Rowv)
-    Rowv <- rev(Rowv)
+    Rowv <- rev(Rowv) # I would rather the matrix will be with the first row at the top
   }
   if (is.dendrogram(Rowv)) {
     # Rowv <- rev(Rowv)
@@ -239,6 +246,12 @@ heatmapr <- function(x,
     Rowv <- NULL
     rowInd <- 1:nr
   }
+
+  # making the order of the matrix rows comparable with heatmap.2
+  Rowv <- rev(Rowv)
+  rowInd <- rev(rowInd)
+
+
 
   if (identical(Colv, "Rowv")) {
     # i.e.: if symm=TRUE
@@ -302,10 +315,27 @@ heatmapr <- function(x,
 
   ## reorder x (and others)
   ##=======================
-  x <- x[rowInd, colInd]
+  x <- x[rowInd, colInd, drop = FALSE]
   if (!missing(cellnote))
-    cellnote <- cellnote[rowInd, colInd]
+    cellnote <- cellnote[rowInd, colInd, drop = FALSE]
 
+  if (!is.null(row_side_colors)) {
+    if(is.vector(row_side_colors)) {
+      row_side_colors <- data.frame("row_side_colors" = row_side_colors)
+    }
+    if (dim(row_side_colors)[1] != dim(x)[1])
+      stop("row_side_colors and x have different numbers of rows")
+    row_side_colors <- row_side_colors[rowInd, , drop = FALSE]
+  }
+  if (!is.null(col_side_colors)) {
+    if(is.vector(col_side_colors)) {
+      col_side_colors <- matrix(col_side_colors, nrow = 1)
+      rownames(col_side_colors) <- "col_side_colors"
+    }
+    if (dim(col_side_colors)[2] != dim(x)[2])
+      stop("col_side_colors and x have different numbers of columns")
+    col_side_colors <- col_side_colors[, colInd, drop = FALSE]
+  }
 
   ## Dendrograms - Update the labels and change to dendToTree
   ##=======================
@@ -408,7 +438,9 @@ heatmapr <- function(x,
   }
 
   heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx, # image = imgUri,
-                  theme = theme, options = options)
+                  theme = theme, options = options,
+                  row_side_colors = row_side_colors,
+                  col_side_colors = col_side_colors)
 
   class(heatmapr) <- "heatmapr"
 

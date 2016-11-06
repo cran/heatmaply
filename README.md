@@ -45,6 +45,13 @@ install.packages('heatmaply')
 To install the latest ("cutting-edge") GitHub version run:
 
 ```R
+
+# good packages to install for this to work smoothly:
+
+install.packages("Rcpp", "ggplot2","munsell","htmltools","DBI","assertthat","gridExtra",
+'devtools',"fpc","TSP","registry","gclus","gplots","RColorBrewer",
+"stringr","labeling","yaml")
+
 # You'll need devtools
 install.packages.2 <- function (pkg) if (!require(pkg)) install.packages(pkg);
 install.packages.2('devtools')
@@ -70,7 +77,7 @@ library(heatmaply)
 heatmaply(mtcars, k_row = 3, k_col = 2)
 ```
 
-**For more (interactive) examples see the [online vignette on CRAN](https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html)**
+**For more (interactive) examples see the [online vignette on CRAN](https://CRAN.R-project.org/package=heatmaply/vignettes/heatmaply.html)**
 
 
 

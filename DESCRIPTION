@@ -1,8 +1,8 @@
 Package: heatmaply
 Type: Package
 Title: Interactive Heat Maps Using 'plotly'
-Version: 0.6.0
-Date: 2016-11-05
+Version: 0.7.0
+Date: 2017-01-21
 Authors@R: c(person("Tal", "Galili", role = c("aut", "cre", "cph"), email =
     "tal.galili@gmail.com", comment = "https://www.r-statistics.com"),
     person("Alan", "Ocallaghan", comment = "https://github.com/Alanocallaghan",role = "ctb"),
@@ -22,8 +22,8 @@ Description: Create interactive 'heatmaps' that are usable from the R console,
     ('plotly.js' is able to handle larger size matrix), and the ability to zoom from
     the 'dendrogram' panes.
 Depends: R (>= 3.0.0), plotly (>= 4.5.2), viridis
-Imports: ggplot2, dendextend, magrittr (>= 1.0.1), reshape2, scales,
-        seriation, utils, stats, colorspace, GGally
+Imports: ggplot2, dendextend (>= 1.4.0), magrittr (>= 1.0.1), reshape2,
+        scales, seriation, utils, stats, colorspace, GGally
 Suggests: knitr, rmarkdown, gplots, htmlwidgets, RColorBrewer
 VignetteBuilder: knitr
 License: GPL-2 | GPL-3
@@ -34,10 +34,10 @@ BugReports: https://github.com/talgalili/heatmaply/issues
 LazyData: TRUE
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-11-05 16:12:16 UTC; junior
+Packaged: 2017-01-22 08:16:34 UTC; junior
 Author: Tal Galili [aut, cre, cph] (https://www.r-statistics.com),
   Alan Ocallaghan [ctb] (https://github.com/Alanocallaghan),
   Yoav Benjamini [ths]
 Maintainer: Tal Galili <tal.galili@gmail.com>
 Repository: CRAN
-Date/Publication: 2016-11-06 00:17:15
+Date/Publication: 2017-01-22 12:38:31

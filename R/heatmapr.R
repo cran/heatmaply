@@ -48,7 +48,9 @@
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
 #' @param k_row an integer scalar with the desired number of groups by which to color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
+#' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
 #' @param k_col an integer scalar with the desired number of groups by which to color the dendrogram's branches in the columns (uses \link[dendextend]{color_branches})
+#' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
 #'
 #' @param symm logical indicating if x should be treated symmetrically; can only be true when x is a square matrix.
 #' @param revC logical indicating if the column order should be reversed for plotting.
@@ -215,14 +217,14 @@ heatmapr <- function(x,
                                 dist_x <- distfun(x) # dist is on the rows by default
                                 hc_x <- hclustfun(dist_x)
                                 dend_x <- as.dendrogram(hc_x)
-                                dend_x2 <- dendextend::seriate_dendrogram(dend_x, dist_x, method = "OLO")
+                                dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "OLO")
                                 dend_x2
                              },
                       "GW" = {
                         dist_x <- distfun(x) # dist is on the rows by default
                         hc_x <- hclustfun(dist_x)
                         dend_x <- as.dendrogram(hc_x)
-                        dend_x2 <- dendextend::seriate_dendrogram(dend_x, dist_x, method = "GW")
+                        dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "GW")
                         dend_x2
                       }
 
@@ -266,7 +268,7 @@ heatmapr <- function(x,
                       hc_x <- hclustfun(dist_x)
                       o <- seriate(dist_x, method = "OLO", control = list(hclust = hc_x) )
                       dend_x <- as.dendrogram(hc_x)
-                      dend_x2 <- dendextend::rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
+                      dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
                       dend_x2
                     },
                     "GW" = {
@@ -274,7 +276,7 @@ heatmapr <- function(x,
                       hc_x <- hclustfun(dist_x)
                       o <- seriate(dist_x, method = "GW", control = list(hclust = hc_x) )
                       dend_x <- as.dendrogram(hc_x)
-                      dend_x2 <- dendextend::rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
+                      dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
                       dend_x2
                     }
 
@@ -347,10 +349,12 @@ heatmapr <- function(x,
   if(!missing(k_row) | !missing(k_col)) dendextend::assign_dendextend_options()
 
   if(is.dendrogram(Rowv) & !missing(k_row)) {
-    Rowv <- dendextend::color_branches(Rowv, k = k_row)
+    if(is.na(k_row)) k_row <- find_k(Rowv)$k
+    Rowv <- color_branches(Rowv, k = k_row)
   }
   if(is.dendrogram(Colv) & !missing(k_col)) {
-    Colv <- dendextend::color_branches(Colv, k = k_col)
+    if(is.na(k_col)) k_col <- find_k(Colv)$k
+    Colv <- color_branches(Colv, k = k_col)
   }
 
   rowDend <- if(is.dendrogram(Rowv)) Rowv else NULL

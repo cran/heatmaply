@@ -8,6 +8,7 @@
 
 
 #' @title  Cluster heatmap based on plotly
+#' @name heatmaply
 #'
 #' @description
 #' An object of class heatmapr includes all the needed information
@@ -36,7 +37,35 @@
 #'  the third is used as the top margin, and the fourth is used as the bottom margin.
 #'  If a single value is provided, it will be used as all four margins.
 #'
-#' @param dendrogram Passed to heatmapr; "row", "column", or "both". Default is "both"
+#' @param Rowv determines if and how the row dendrogram should be reordered.	By default, it is TRUE, which implies dendrogram is computed and reordered based on row means. If NULL or FALSE, then no dendrogram is computed and no reordering is done. If a \link{dendrogram} (or \link{hclust}), then it is used "as-is", ie without any reordering. If a vector of integers, then dendrogram is computed and reordered based on the order of the vector.
+#' @param Colv determines if and how the column dendrogram should be reordered.	Has the options as the Rowv argument above and additionally when x is a square matrix, Colv = "Rowv" means that columns should be treated identically to the rows.
+#' @param distfun function used to compute the distance (dissimilarity) between both rows and columns. Defaults to dist.
+#' @param hclustfun function used to compute the hierarchical clustering when Rowv or Colv are not dendrograms. Defaults to hclust.
+#'
+#' @param dist_method default is NULL (which results in "euclidean" to be used). Can accept alternative character strings indicating the
+#' method to be passed to distfun. By default distfun. is \link{dist} hence
+#' this can be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski".
+#' @param hclust_method default is NULL (which results in "complete" to be used). Can accept alternative character strings indicating the
+#' method to be passed to hclustfun By default hclustfun is \link{hclust} hence
+#' this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#'
+#' @param distfun_row distfun for row dendrogram only.
+#' @param hclustfun_row hclustfun for col dendrogram only.
+#' @param distfun_col distfun for row dendrogram only.
+#' @param hclustfun_col hclustfun for col dendrogram only.
+#'
+#' @param dendrogram character string indicating whether to draw 'none', 'row', 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv (or Colv) arguments are honoured.
+#' @param reorderfun function(d, w) of dendrogram and weights for reordering the row and column dendrograms. The default uses stats{reorder.dendrogram}
+#'
+#' @param k_row an integer scalar with the desired number of groups by which to color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
+#' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
+#' @param k_col an integer scalar with the desired number of groups by which to color the dendrogram's branches in the columns (uses \link[dendextend]{color_branches})
+#' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
+#'
+#' @param symm logical indicating if x should be treated symmetrically; can only be true when x is a square matrix.
+#' @param revC logical indicating if the column order should be reversed for plotting.
+#' Default (when missing) - is FALSE, unless symm is TRUE.
+#' This is useful for cor matrix.
 #'
 #' @param row_dend_left logical (default is FALSE). Should the row dendrogram be
 #' plotted on the left side of the heatmap. If false then it will be plotted on the right
@@ -97,9 +126,13 @@
 #' parameter is ignored (it is checked using \link[dendextend]{has_edgePar}("lwd")).
 #'
 #'
-#' @aliases
-#' heatmaply.default
-#' heatmaply.heatmapr
+#' @param file HTML file name to save the heatmaply into. Should be a character string ending with ".html".
+#' For example: heatmaply(x, file = "heatmaply_plot.html").
+#' This should not include a directory, only the name of the file.
+#' You can relocate the file once it is created, or use \link{setwd} first.
+#' This is based on \link[htmlwidgets]{saveWidget}.
+#'
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -144,11 +177,15 @@
 #'              margins = c(40, 130))
 #' subplot(hm1, hm2, margin = .02, shareY = TRUE)
 #'
-#' # We can save heatmaply as a widget by using:
+#'
+#' # We can save heatmaply as an HTML file by using:
+#' heatmaply(iris[,-5], file = "heatmaply_iris.html")
+#'
+#' # If we don't want the HTML to be selfcontained, we can use the following:
 #' library(heatmaply)
 #' library(htmlwidgets)
 #' heatmaply(iris[,-5]) %>%
-#'    saveWidget(file="test.html",selfcontained = FALSE)
+#'    saveWidget(file="heatmaply_iris.html",selfcontained = FALSE)
 #'
 #'
 #' # Example for using RowSideColors
@@ -173,44 +210,33 @@
 #'           row_side_colors = x[,8:9])
 #'
 #'
+#' ## Example of using Rowv And Colv for custumized dendrograms.
+#'
+#'
+#' x  <- as.matrix(datasets::mtcars)
+#'
+#' # now let's spice up the dendrograms a bit:
+#' library(dendextend)
+#'
+#' row_dend  <- x %>% dist %>% hclust %>% as.dendrogram %>%
+#'   set("branches_k_color", k = 3) %>% set("branches_lwd", 4) %>%
+#'   ladderize
+#' #    rotate_DendSer(ser_weight = dist(x))
+#' col_dend  <- x %>% t %>% dist %>% hclust %>% as.dendrogram %>%
+#'   set("branches_k_color", k = 2) %>% set("branches_lwd", 4) %>%
+#'   ladderize
+#' #    rotate_DendSer(ser_weight = dist(t(x)))
+#'
+#' heatmaply(x, Rowv = row_dend, Colv = col_dend)
 #'
 #' }
-heatmaply <- function(x,
-                      # elements for scale_fill_gradientn
-                      colors = viridis(n=256, alpha = 1, begin = 0,
-                                        end = 1, option = "viridis"),
-                      limits = NULL,
-                      na.value = "grey50",
-                      row_text_angle = 0,
-                      column_text_angle = 45,
-                      subplot_margin = 0,
-                      dendrogram = "both",
-                      row_dend_left = FALSE,
-                      margins = c(50, 50, NA, 0),
-                      ...,
-                      scale_fill_gradient_fun = scale_fill_gradientn(
-                          colors = if(is.function(colors)) colors(256) else colors,
-                                             na.value = na.value, limits = limits),
-                      grid_color = NA,
-                      srtRow, srtCol,
-                      xlab = "", ylab = "",
-                      main = "",
-                      titleX = TRUE, titleY = TRUE,
-                      hide_colorbar = FALSE,
-                      key.title = NULL,
-                      return_ppxpy = FALSE,
-                      row_side_colors = NULL,
-                      row_side_palette,
-                      col_side_colors = NULL,
-                      col_side_palette,
-                      ColSideColors = NULL,
-                      RowSideColors = NULL,
-                      heatmap_layers,
-                      branches_lwd = 0.6
-                      ) {
+heatmaply <- function(x, ...) {
   UseMethod("heatmaply")
 }
+
+
 #' @export
+#' @rdname heatmaply
 heatmaply.default <- function(x,
                               # elements for scale_fill_gradientn
                               colors = viridis(n=256, alpha = 1, begin = 0,
@@ -220,7 +246,29 @@ heatmaply.default <- function(x,
                               row_text_angle = 0,
                               column_text_angle = 45,
                               subplot_margin = 0,
-                              dendrogram = "both",
+
+                              ## dendrogram control
+                              Rowv = TRUE,
+                              Colv = if (symm) "Rowv" else TRUE,
+                              distfun = dist,
+                              hclustfun = hclust,
+                              dist_method = NULL,
+                              hclust_method = NULL,
+
+                              distfun_row,
+                              hclustfun_row,
+                              distfun_col,
+                              hclustfun_col,
+
+                              dendrogram = c("both", "row", "column", "none"),
+                              reorderfun = function(d, w) reorder(d, w),
+
+                              k_row,
+                              k_col,
+
+                              symm = FALSE,
+                              revC,
+
                               row_dend_left = FALSE,
                               margins = c(50, 50, NA, 0),
                               ...,
@@ -242,13 +290,15 @@ heatmaply.default <- function(x,
                               ColSideColors = NULL,
                               RowSideColors = NULL,
                               heatmap_layers = NULL,
-                              branches_lwd = 0.6
+                              branches_lwd = 0.6,
+                              file
 ) {
   ## Suppress creation of new graphcis device, but on exit replace it.
   old_dev <- options()[["device"]]
   on.exit(options(device = old_dev))
   options(device = names(capabilities()[which(capabilities())])[1])
 
+  dendrogram <- match.arg(dendrogram)
 
   if(!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
 
@@ -287,19 +337,46 @@ heatmaply.default <- function(x,
     x <- x[, ss_c_numeric]
   }
 
+  # help dendrogram work again:
+  if(dendrogram == "row") Colv <- FALSE
+  if(dendrogram == "column") Rowv <- FALSE
+  if(dendrogram == "none") Rowv <- Colv <- FALSE
+
 
   hm <- heatmapr(x,
     row_side_colors = row_side_colors,
     col_side_colors = col_side_colors,
+
+    ## dendrogram control
+    Rowv = Rowv,
+    Colv = Colv,
+    distfun = distfun,
+    hclustfun = hclustfun,
+    dist_method = dist_method,
+    hclust_method = hclust_method,
+
+    distfun_row = distfun_row,
+    hclustfun_row = hclustfun_row,
+    distfun_col = distfun_col,
+    hclustfun_col = hclustfun_col,
+
     dendrogram = dendrogram,
+    reorderfun = reorderfun,
+
+    k_row = k_row,
+    k_col = k_col,
+
+    symm = symm,
+    revC = revC,
+
     ...)
-  heatmaply.heatmapr(hm, # colors = colors, limits = limits,
+  hmly <- heatmaply.heatmapr(hm, # colors = colors, limits = limits,
                      scale_fill_gradient_fun = scale_fill_gradient_fun,
                      grid_color = grid_color,
                      row_text_angle = row_text_angle,
                      column_text_angle = column_text_angle,
                      subplot_margin = subplot_margin,
-                     dendrogram = dendrogram,
+
                      row_dend_left = row_dend_left,
                      xlab=xlab, ylab=ylab, main = main,
                      titleX = titleX, titleY = titleY,
@@ -316,6 +393,10 @@ heatmaply.default <- function(x,
                      heatmap_layers = heatmap_layers,
                      branches_lwd = branches_lwd
                 ) # TODO: think more on what should be passed in "..."
+
+  if(!missing(file)) hmly %>% saveWidget(file = file, selfcontained = TRUE)
+
+  hmly
 }
 
 
@@ -336,6 +417,7 @@ ggplot_heatmap <- function(xx,
                            grid_size = 0.1,
                            key.title = NULL,
                            layers,
+                           row_dend_left = FALSE,
                            ...) {
   theme_clear_grid_heatmap <- theme(axis.line = element_line(color = "black"),
                                     panel.grid.major = element_blank(),
@@ -344,7 +426,7 @@ ggplot_heatmap <- function(xx,
                                     panel.background = element_blank())
   # heatmap
   # xx <- x$matrix$data
-  df <- as.data.frame(xx)
+  if(!is.data.frame(df)) df <- as.data.frame(xx)
   # colnames(df) <- x$matrix$cols
   df$row <- if(!is.null(rownames(xx)))
               {rownames(xx)} else
@@ -364,9 +446,11 @@ ggplot_heatmap <- function(xx,
     theme_bw()+ theme_clear_grid_heatmap +
     theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1),
           axis.text.y = element_text(angle = row_text_angle, hjust = 1)
-          ) +
+          )
+
+  if(!missing(layers)) p <- p + layers
     ## Passed in to allow users to alter (courtesy of GenVisR)
-    layers
+
   # p <- p + scale_x_discrete(limits = unique(mdf))
   # http://stats.stackexchange.com/questions/5007/how-can-i-change-the-title-of-a-legend-in-ggplot2
   p <- p + labs(fill=key.title)
@@ -378,6 +462,8 @@ ggplot_heatmap <- function(xx,
     p <- p + geom_vline(xintercept =c(0:ncol(xx))+.5, color = grid_color) # , size = grid_size # not implemented since it doesn't work with plotly
 
   }
+
+  if(row_dend_left) p <- p + scale_y_discrete(position = "right") # possible as of ggplot 2.1.0 !
 
   p
 }
@@ -496,6 +582,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
 
 
 #' @export
+#' @rdname heatmaply
 heatmaply.heatmapr <- function(x,
                                # elements for scale_fill_gradientn
                                colors = viridis(n=256, alpha = 1, begin = 0,
@@ -505,7 +592,7 @@ heatmaply.heatmapr <- function(x,
                                row_text_angle = 0,
                                column_text_angle = 45,
                                subplot_margin = 0,
-                               dendrogram,
+
                                row_dend_left = FALSE,
                                margins = c(50, 50, NA, 0),
                                ...,
@@ -591,7 +678,8 @@ heatmaply.heatmapr <- function(x,
                       scale_fill_gradient_fun,
                       grid_color,
                       key.title = key.title,
-                      layers = heatmap_layers)
+                      layers = heatmap_layers,
+                      row_dend_left = row_dend_left)
   if(return_ppxpy) {
     return(list(p=p, px=px, py=py))
   }
@@ -637,7 +725,8 @@ heatmaply.heatmapr <- function(x,
     p <- hide_colorbar(p)
     # px <- hide_colorbar(px)
     # py <- hide_colorbar(py)
-    }
+  }
+
   # TODO: this doesn't work because of the allignment. But using this might
   # speedup the code to deal with MUCH larger matrices.
   # p <- plot_ly(z = xx, type = "heatmap")
@@ -671,6 +760,17 @@ heatmaply.heatmapr <- function(x,
   l <- layout(heatmap_subplot, showlegend = FALSE)  %>%
     layout(margin = list(l = margins[2], b = margins[1], t = margins[3], r = margins[4]))
   # print(l)
+
+
+
+  # clean the modeBarButtons from irrelevent icons
+  # l$x$config$modeBarButtonsToRemove <- list("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverCompareCartesian", "sendDataToCloud")
+  # l <- config(l, displaylogo = FALSE, collaborate = FALSE) # ,
+  #             #modeBarButtonsToRemove = list("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverClosestCartesian", "hoverCompareCartesian", "sendDataToCloud"))
+  l <- config(l, displaylogo = FALSE, collaborate = FALSE,
+        modeBarButtonsToRemove = c("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverClosestCartesian", "hoverCompareCartesian", "sendDataToCloud"))
+
+
   l
 }
 

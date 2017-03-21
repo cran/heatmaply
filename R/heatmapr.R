@@ -40,10 +40,23 @@
 #' @param anim_duration Number of milliseconds to animate zooming in and out.
 #'   For large \code{x} it may help performance to set this value to \code{0}.
 #'
-#' @param Rowv determines if and how the row dendrogram should be reordered.	By default, it is TRUE, which implies dendrogram is computed and reordered based on row means. If NULL or FALSE, then no dendrogram is computed and no reordering is done. If a dendrogram, then it is used "as-is", ie without any reordering. If a vector of integers, then dendrogram is computed and reordered based on the order of the vector.
+#' @param Rowv determines if and how the row dendrogram should be reordered.	By default, it is TRUE, which implies dendrogram is computed and reordered based on row means. If NULL or FALSE, then no dendrogram is computed and no reordering is done. If a \link{dendrogram} (or \link{hclust}), then it is used "as-is", ie without any reordering. If a vector of integers, then dendrogram is computed and reordered based on the order of the vector.
 #' @param Colv determines if and how the column dendrogram should be reordered.	Has the options as the Rowv argument above and additionally when x is a square matrix, Colv = "Rowv" means that columns should be treated identically to the rows.
 #' @param distfun function used to compute the distance (dissimilarity) between both rows and columns. Defaults to dist.
 #' @param hclustfun function used to compute the hierarchical clustering when Rowv or Colv are not dendrograms. Defaults to hclust.
+#'
+#' @param dist_method default is NULL (which results in "euclidean" to be used). Can accept alternative character strings indicating the
+#' method to be passed to distfun. By default distfun. is \link{dist} hence
+#' this can be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski".
+#' @param hclust_method default is NULL (which results in "complete" to be used). Can accept alternative character strings indicating the
+#' method to be passed to hclustfun By default hclustfun is \link{hclust} hence
+#' this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#'
+#' @param distfun_row distfun for row dendrogram only.
+#' @param hclustfun_row hclustfun for col dendrogram only.
+#' @param distfun_col distfun for row dendrogram only.
+#' @param hclustfun_col hclustfun for col dendrogram only.
+#'
 #' @param dendrogram character string indicating whether to draw 'none', 'row', 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv (or Colv) arguments are honoured.
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
@@ -107,6 +120,15 @@ heatmapr <- function(x,
                       Colv = if (symm) "Rowv" else TRUE,
                       distfun = dist,
                       hclustfun = hclust,
+                       dist_method = NULL,
+                       hclust_method = NULL,
+
+
+                      distfun_row,
+                      hclustfun_row,
+                      distfun_col,
+                      hclustfun_col,
+
                       dendrogram = c("both", "row", "column", "none"),
                       reorderfun = function(d, w) reorder(d, w),
 
@@ -149,6 +171,26 @@ heatmapr <- function(x,
 
                       ...
 ) {
+
+
+  ## update hclust/dist functions?
+  ##====================
+  if(!is.null(dist_method)) {
+    distfun_old <- distfun
+    distfun <- function(x) {distfun_old(x, method = dist_method)}
+  }
+  if(!is.null(hclust_method)) {
+    hclustfun_old <- hclustfun
+    hclustfun <- function(x) {hclustfun_old(x, method = hclust_method)}
+  }
+
+
+  if(missing(distfun_row)) distfun_row <- distfun
+  if(missing(hclustfun_row)) hclustfun_row <- hclustfun
+  if(missing(distfun_col)) distfun_col <- distfun
+  if(missing(hclustfun_col)) hclustfun_col <- hclustfun
+
+
 
   ## x is a matrix!
   ##====================
@@ -214,15 +256,15 @@ heatmapr <- function(x,
                      "mean" = rowMeans(x, na.rm = na.rm),
                      "none" = 1:nrow(x),
                      "OLO" = {
-                                dist_x <- distfun(x) # dist is on the rows by default
-                                hc_x <- hclustfun(dist_x)
+                                dist_x <- distfun_row(x) # dist is on the rows by default
+                                hc_x <- hclustfun_row(dist_x)
                                 dend_x <- as.dendrogram(hc_x)
                                 dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "OLO")
                                 dend_x2
                              },
                       "GW" = {
-                        dist_x <- distfun(x) # dist is on the rows by default
-                        hc_x <- hclustfun(dist_x)
+                        dist_x <- distfun_row(x) # dist is on the rows by default
+                        hc_x <- hclustfun_row(dist_x)
                         dend_x <- as.dendrogram(hc_x)
                         dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "GW")
                         dend_x2
@@ -234,9 +276,12 @@ heatmapr <- function(x,
 
   }
   if (is.numeric(Rowv)) {
-    Rowv <- reorderfun(as.dendrogram(hclustfun(distfun(x))), Rowv)
+    Rowv <- reorderfun(as.dendrogram(hclustfun_row(distfun_row(x))), Rowv)
     Rowv <- rev(Rowv) # I would rather the matrix will be with the first row at the top
   }
+
+  if (is.hclust(Rowv)) Rowv <- as.dendrogram(Rowv)
+
   if (is.dendrogram(Rowv)) {
     # Rowv <- rev(Rowv)
     rowInd <- order.dendrogram(Rowv)
@@ -264,16 +309,16 @@ heatmapr <- function(x,
                     "mean" = colMeans(x, na.rm = na.rm),
                     "none" = 1:ncol(x),
                     "OLO" = {
-                      dist_x <- distfun(t(x)) # dist is on the rows by default
-                      hc_x <- hclustfun(dist_x)
+                      dist_x <- distfun_col(t(x)) # dist is on the rows by default
+                      hc_x <- hclustfun_col(dist_x)
                       o <- seriate(dist_x, method = "OLO", control = list(hclust = hc_x) )
                       dend_x <- as.dendrogram(hc_x)
                       dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
                       dend_x2
                     },
                     "GW" = {
-                      dist_x <- distfun(t(x)) # dist is on the rows by default
-                      hc_x <- hclustfun(dist_x)
+                      dist_x <- distfun_col(t(x)) # dist is on the rows by default
+                      hc_x <- hclustfun_col(dist_x)
                       o <- seriate(dist_x, method = "GW", control = list(hclust = hc_x) )
                       dend_x <- as.dendrogram(hc_x)
                       dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
@@ -283,8 +328,11 @@ heatmapr <- function(x,
     )
   }
   if (is.numeric(Colv)) {
-    Colv <- reorderfun(as.dendrogram(hclustfun(distfun(t(x)))), rev(Colv))
+    Colv <- reorderfun(as.dendrogram(hclustfun_col(distfun_col(t(x)))), rev(Colv))
   }
+
+  if (is.hclust(Colv)) Colv <- as.dendrogram(Colv)
+
   if (is.dendrogram(Colv)) {
     Colv <- rev(Colv)
     colInd <- order.dendrogram(Colv)
@@ -322,7 +370,7 @@ heatmapr <- function(x,
     cellnote <- cellnote[rowInd, colInd, drop = FALSE]
 
   if (!is.null(row_side_colors)) {
-    if(is.vector(row_side_colors)) {
+    if(!(is.data.frame(row_side_colors) | is.matrix(row_side_colors))) {
       row_side_colors <- data.frame("row_side_colors" = row_side_colors)
     }
     if (dim(row_side_colors)[1] != dim(x)[1])
@@ -330,7 +378,7 @@ heatmapr <- function(x,
     row_side_colors <- row_side_colors[rowInd, , drop = FALSE]
   }
   if (!is.null(col_side_colors)) {
-    if(is.vector(col_side_colors)) {
+    if( !(is.data.frame(col_side_colors) | is.matrix(col_side_colors)) ) {
       col_side_colors <- matrix(col_side_colors, nrow = 1)
       rownames(col_side_colors) <- "col_side_colors"
     }

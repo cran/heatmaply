@@ -33,7 +33,9 @@ library(heatmaply)
 heatmaply(mtcars)
 
 ## ------------------------------------------------------------------------
-heatmaply(mtcars, margins = c(40, 130))
+heatmaply(mtcars, xlab = "Features", ylab = "Cars", 
+		main = "An example of title and xlab/ylab",
+		margins = c(60,100,40,20) )
 # heatmaply(mtcars) %>% layout(margin = list(l = 130, b = 40))
 
 ## ------------------------------------------------------------------------
@@ -62,16 +64,36 @@ heatmaply(mtcars[1:10,],  margins = c(40, 130),
           seriate = "none")
 
 ## ------------------------------------------------------------------------
+
+x  <- as.matrix(datasets::mtcars)
+
+# now let's spice up the dendrograms a bit:
+library(dendextend)
+
+row_dend  <- x %>% dist %>% hclust %>% as.dendrogram %>%
+   set("branches_k_color", k = 3) %>% set("branches_lwd", c(1,3)) %>%
+   ladderize
+#    rotate_DendSer(ser_weight = dist(x))
+col_dend  <- x %>% t %>% dist %>% hclust %>% as.dendrogram %>%
+   set("branches_k_color", k = 2) %>% set("branches_lwd", c(1,2)) %>%
+   ladderize
+#    rotate_DendSer(ser_weight = dist(t(x)))
+
+heatmaply(x, Rowv = row_dend, Colv = col_dend)
+
+
+
+## ------------------------------------------------------------------------
 # divergent_viridis_magma <- c(rev(viridis(100, begin = 0.3)), magma(100, begin = 0.3))
 # rwb <- colorRampPalette(colors = c("darkred", "white", "darkgreen"))
-library(RColorBrewer)
-# display.brewer.pal(11, "BrBG")
-BrBG <- colorRampPalette(brewer.pal(11, "BrBG"))
-Spectral <- colorRampPalette(brewer.pal(11, "Spectral"))
+# library(RColorBrewer)
+# # display.brewer.pal(11, "BrBG")
+# BrBG <- colorRampPalette(brewer.pal(11, "BrBG"))
+# Spectral <- colorRampPalette(brewer.pal(11, "Spectral"))
 
 heatmaply(cor(mtcars), margins = c(40, 40),
           k_col = 2, k_row = 2,
-          colors = BrBG(256),
+          colors = BrBG,
           limits = c(-1,1))
 
 
@@ -123,6 +145,11 @@ heatmap.2(x, trace = "none", col = viridis(100),
 ## ------------------------------------------------------------------------
 heatmaply(x, seriate = "mean",
           RowSideColors=rc)
+
+# heatmaply(x, seriate = "mean",
+#           RowSideColors=factor(rc))
+
+
 
 ## ------------------------------------------------------------------------
 heatmaply(x[,-c(8,9)], seriate = "mean",

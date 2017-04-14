@@ -2,8 +2,8 @@
 % Please edit documentation in R/percentize.R
 \name{normalize}
 \alias{normalize}
-\alias{normalize.data.frame}
 \alias{normalize.default}
+\alias{normalize.data.frame}
 \alias{normalize.matrix}
 \title{Normalization transformation (0-1)}
 \usage{
@@ -18,7 +18,8 @@ normalize(x, ...)
 A vector (or data.frame) after normalizing the numeric variables.
 }
 \description{
-An Empirical Normalization Transformation brings data to the 0 to 1 scale.
+An Empirical Normalization Transformation brings data to the 0 to 1 scale
+by substracting the minimum and dividing by the maximum of all observations.
 This is similar to \link{percentize} in that it allows to compare variables
 of different scales, but it also keeps the shape of the distribution.
 }
@@ -34,9 +35,11 @@ heatmaply(normalize(x))
 
 x <- data.frame(a = 1:10, b = 11:20)
 x[4:6, 1:2] <- NA
-percentize(x)
-percentize(x[,1])
+normalize(x)
+normalize(x[,1])
 
 }
 }
-
+\seealso{
+\link{percentize}
+}

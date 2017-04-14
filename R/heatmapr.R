@@ -76,8 +76,6 @@
 #' @param digits integer indicating the number of decimal places to be used by \link{round} for 'label'.
 #' @param cellnote (optional) matrix of the same dimensions as \code{x} that has the human-readable version of each value, for displaying to the user on hover. If \code{NULL}, then \code{x} will be coerced using \code{\link{as.character}}.
 #' If missing, it will use \code{x}, after rounding it based on the \code{digits} parameter.
-#' @param cellnote_scale logical (default is TRUE). IF cellnote is missing and x is used,
-#' should cellnote be scaled if x is also scaled?
 #'
 #' @param cexRow positive numbers. If not missing, it will override \code{xaxis_font_size}
 #' and will give it a value cexRow*14
@@ -116,13 +114,12 @@
 heatmapr <- function(x,
 
                       ## dendrogram control
-                      Rowv = TRUE,
-                      Colv = if (symm) "Rowv" else TRUE,
+                      Rowv,
+                      Colv,
                       distfun = dist,
                       hclustfun = hclust,
-                       dist_method = NULL,
-                       hclust_method = NULL,
-
+                      dist_method = NULL,
+                      hclust_method = NULL,
 
                       distfun_row,
                       hclustfun_row,
@@ -132,8 +129,8 @@ heatmapr <- function(x,
                       dendrogram = c("both", "row", "column", "none"),
                       reorderfun = function(d, w) reorder(d, w),
 
-                      k_row,
-                      k_col,
+                      k_row = 1,
+                      k_col = 1,
 
                       symm = FALSE,
                       revC,
@@ -150,8 +147,7 @@ heatmapr <- function(x,
 
                       ## value formatting
                       digits = 3L,
-                      cellnote,
-                      cellnote_scale = TRUE,
+                      cellnote = NULL,
 
                       ##TODO: decide later which names/conventions to keep
                       theme = NULL,
@@ -164,11 +160,9 @@ heatmapr <- function(x,
                       brush_color = "#0000FF",
                       show_grid = TRUE,
                       anim_duration = 500,
-
-                      row_side_colors = NULL,
-                      col_side_colors = NULL,
+                      row_side_colors,
+                      col_side_colors,
                       seriate = c("OLO", "mean", "none", "GW"),
-
                       ...
 ) {
 
@@ -239,17 +233,12 @@ heatmapr <- function(x,
     Rowv <- dendrogram %in% c("both", "row")
   }
   if (missing(Colv)) {
-    Colv <- dendrogram %in% c("both", "column")
+    if (dendrogram %in% c("both", "column")) {
+      Colv <- if (symm) "Rowv" else TRUE
+    } else {
+      Colv <- FALSE
+    }
   }
-
-
-  # switch("c",
-  #        "a" = 4,
-  #        "b" = 5,
-  #        "c" = {
-  #          5+3
-  #          2+1
-  #        })
 
   if (isTRUE(Rowv)) {
     Rowv <- switch(seriate,
@@ -297,8 +286,6 @@ heatmapr <- function(x,
   # making the order of the matrix rows comparable with heatmap.2
   Rowv <- rev(Rowv)
   rowInd <- rev(rowInd)
-
-
 
   if (identical(Colv, "Rowv")) {
     # i.e.: if symm=TRUE
@@ -366,25 +353,26 @@ heatmapr <- function(x,
   ## reorder x (and others)
   ##=======================
   x <- x[rowInd, colInd, drop = FALSE]
-  if (!missing(cellnote))
-    cellnote <- cellnote[rowInd, colInd, drop = FALSE]
+  if (is.null(cellnote)) {
+    cellnote <- round(x, digits = digits)
+  } else {
+    cellnote <- round(cellnote[rowInd, colInd, drop = FALSE], digits = digits)
+  }
 
-  if (!is.null(row_side_colors)) {
+  if (!missing(row_side_colors)) {
     if(!(is.data.frame(row_side_colors) | is.matrix(row_side_colors))) {
       row_side_colors <- data.frame("row_side_colors" = row_side_colors)
     }
-    if (dim(row_side_colors)[1] != dim(x)[1])
-      stop("row_side_colors and x have different numbers of rows")
+    assert_that(nrow(row_side_colors) == nrow(x))
     row_side_colors <- row_side_colors[rowInd, , drop = FALSE]
   }
-  if (!is.null(col_side_colors)) {
+  if (!missing(col_side_colors)) {
     if( !(is.data.frame(col_side_colors) | is.matrix(col_side_colors)) ) {
-      col_side_colors <- matrix(col_side_colors, nrow = 1)
-      rownames(col_side_colors) <- "col_side_colors"
+      col_side_colors <- data.frame(col_side_colors)
+      colnames(col_side_colors) <- "col_side_colors"
     }
-    if (dim(col_side_colors)[2] != dim(x)[2])
-      stop("col_side_colors and x have different numbers of columns")
-    col_side_colors <- col_side_colors[, colInd, drop = FALSE]
+    assert_that(nrow(col_side_colors) == ncol(x))
+    col_side_colors <- col_side_colors[colInd, , drop = FALSE]
   }
 
   ## Dendrograms - Update the labels and change to dendToTree
@@ -394,26 +382,28 @@ heatmapr <- function(x,
   #----------------
   # Due to the internal working of dendextend, in order to use it we first need
   # to populate the dendextend::dendextend_options() space:
-  if(!missing(k_row) | !missing(k_col)) dendextend::assign_dendextend_options()
+  # if(!missing(k_row) | !missing(k_col))  # Setting k_row and k_col to 1 by default
+  dendextend::assign_dendextend_options()
 
-  if(is.dendrogram(Rowv) & !missing(k_row)) {
+  if(is.dendrogram(Rowv)) {
     if(is.na(k_row)) k_row <- find_k(Rowv)$k
-    Rowv <- color_branches(Rowv, k = k_row)
+
+    if(k_row > 1) Rowv <- color_branches(Rowv, k = k_row,
+                            col = k_colors(k_row))
   }
-  if(is.dendrogram(Colv) & !missing(k_col)) {
+  if(is.dendrogram(Colv)) {
     if(is.na(k_col)) k_col <- find_k(Colv)$k
-    Colv <- color_branches(Colv, k = k_col)
+
+    if(k_col > 1) Colv <- color_branches(Colv, k = k_col,
+                            col = k_colors(k_col))
   }
 
   rowDend <- if(is.dendrogram(Rowv)) Rowv else NULL
   colDend <- if(is.dendrogram(Colv)) Colv else NULL
 
-
   ## Scale the data?
   ##====================
   scale <- match.arg(scale)
-
-  if(!cellnote_scale) x_unscaled <- x #keeps a backup for cellnote
 
   if(scale == "row") {
     x <- sweep(x, 1, rowMeans(x, na.rm = na.rm))
@@ -427,30 +417,24 @@ heatmapr <- function(x,
 
   ## cellnote
   ##====================
-  if(missing(cellnote)) {
-    if(cellnote_scale) {
-      cellnote <- round(x, digits = digits)
-    } else { # default
-      cellnote <- round(x_unscaled, digits = digits)
-    }
-  }
-
   # Check that cellnote is o.k.:
-  if (is.null(dim(cellnote))) {
-    if (length(cellnote) != nr*nc) {
-      stop("Incorrect number of cellnote values")
+  if (!is.null(cellnote)) {
+    if (is.null(dim(cellnote))) {
+      if (length(cellnote) != nr*nc) {
+        stop("Incorrect number of cellnote values")
+      }
+      dim(cellnote) <- dim(x)
     }
-    dim(cellnote) <- dim(x)
+    if (!identical(dim(x), dim(cellnote))) {
+      stop("cellnote matrix must have same dimensions as x")
+    }
   }
-  if (!identical(dim(x), dim(cellnote))) {
-    stop("cellnote matrix must have same dimensions as x")
-  }
-
 
   ## Final touches before exporting the object
   ##=======================
 
-  mtx <- list(data = as.matrix(cellnote),
+  mtx <- list(data = as.matrix(x),
+              cellnote = cellnote,
               dim = dim(x),
               rows = rownames(x),
               cols = colnames(x)
@@ -489,10 +473,11 @@ heatmapr <- function(x,
     c(options, list(xclust_height = 0))
   }
 
-  heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx, # image = imgUri,
-                  theme = theme, options = options,
-                  row_side_colors = row_side_colors,
-                  col_side_colors = col_side_colors)
+  heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx,
+                  theme = theme, options = options, cellnote = cellnote)
+
+  if (!missing(row_side_colors)) heatmapr[["row_side_colors"]] <- row_side_colors
+  if (!missing(col_side_colors)) heatmapr[["col_side_colors"]] <- col_side_colors
 
   class(heatmapr) <- "heatmapr"
 

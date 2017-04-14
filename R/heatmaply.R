@@ -1,10 +1,28 @@
 ## TODO: roxygen documentation of all functions
 
-
 # devtools::install_github("ropensci/plotly", ref = "fix/subplot")
 # reference: https://plot.ly/ggplot2/ggdendro-dendrograms/
 # to answer later: http://stackoverflow.com/questions/34733829/questions-about-a-tutorial-regarding-interactive-heatmaps-with-plotly
 # to check: https://plot.ly/r/heatmaps/
+
+
+
+#' @title Checks if an object is of class plotly or not.
+#' @export
+#' @description
+#' Helpful for the plot_method in link{heatmaply}.
+#'
+#' @param x an object to check
+#'
+#' @return
+#' TRUE if the object ingerits "plotly" as a class.
+#'
+is.plotly <- function(x) {
+  inherits(x, "plotly")
+}
+
+
+
 
 
 #' @title  Cluster heatmap based on plotly
@@ -20,32 +38,56 @@
 #' @param x can either be a heatmapr object, or a numeric matrix
 #'   Defaults to \code{TRUE} unless \code{x} contains any \code{NA}s.
 #'
-#' @param colors a vector of colors to use for heatmap color.
-#' The default uses \code{\link[viridis]{viridis}(n=256, alpha = 1, begin = 0, end = 1, option = "viridis")}
+#' @param colors,col a vector of colors to use for heatmap color.
+#' The default uses
+#' \code{\link[viridis]{viridis}(n=256, alpha = 1, begin = 0, end = 1, option = "viridis")}
 #' It is passed to \link[ggplot2]{scale_fill_gradientn}.
 #' If colors is a color function (with the first argument being `n` = the number of colors),
 #' it will be used to create 256 colors from that function.
+#' (col is there to stay compatible with \link[gplots]{heatmap.2})
 #' @param limits a two dimensional numeric vector specifying the data range for the scale.
 #' @param na.value color to use for missing values (default is "grey50").
 #'
-#' @param row_text_angle numeric (Default is 0), the angle of the text of the rows. (this is called srtRow in \link[gplots]{heatmap.2})
-#' @param column_text_angle numeric (Default is 45), the angle of the text of the columns. (this is called srtCol in \link[gplots]{heatmap.2})
+#' @param row_text_angle numeric (Default is 0), the angle of the text of the
+#' rows. (this is called srtRow in \link[gplots]{heatmap.2})
+#' @param column_text_angle numeric (Default is 45), the angle of the text of
+#' the columns. (this is called srtCol in \link[gplots]{heatmap.2})
 #'
-#' @param subplot_margin Currently not well implemented. It is passed to \link[plotly]{subplot}. Default is 0. Either a single value or
+#' @param subplot_margin Currently not well implemented. It is passed to
+#' \link[plotly]{subplot}. Default is 0. Either a single value or
 #'  four values (all between 0 and 1). If four values are provided,
 #'  the first is used as the left margin, the second is used as the right margin,
 #'  the third is used as the top margin, and the fourth is used as the bottom margin.
 #'  If a single value is provided, it will be used as all four margins.
 #'
-#' @param Rowv determines if and how the row dendrogram should be reordered.	By default, it is TRUE, which implies dendrogram is computed and reordered based on row means. If NULL or FALSE, then no dendrogram is computed and no reordering is done. If a \link{dendrogram} (or \link{hclust}), then it is used "as-is", ie without any reordering. If a vector of integers, then dendrogram is computed and reordered based on the order of the vector.
-#' @param Colv determines if and how the column dendrogram should be reordered.	Has the options as the Rowv argument above and additionally when x is a square matrix, Colv = "Rowv" means that columns should be treated identically to the rows.
-#' @param distfun function used to compute the distance (dissimilarity) between both rows and columns. Defaults to dist.
-#' @param hclustfun function used to compute the hierarchical clustering when Rowv or Colv are not dendrograms. Defaults to hclust.
+#' @param cellnote Mouseover values for the data. Useful if applying scaling.
+#' @param draw_cellnote Should the cellnote annotations be drawn? Defaults is FALSE,
+#' if cellnote is not supplied, TRUE if cellnote is supplied. If TRUE and
+#' cellnote is not supplied, x will be used for cellnote.
+#' @param cellnote_color The color of the cellnote text to be used.
 #'
-#' @param dist_method default is NULL (which results in "euclidean" to be used). Can accept alternative character strings indicating the
+#' @param Rowv determines if and how the row dendrogram should be reordered.
+#' By default, it is TRUE, which implies dendrogram is computed and reordered
+#' based on row means. If NULL or FALSE, then no dendrogram is computed and
+#' no reordering is done. If a \link{dendrogram} (or \link{hclust}),
+#' then it is used "as-is", ie without any reordering. If a vector of integers,
+#' then dendrogram is computed and reordered based on the order of the vector.
+#' @param Colv determines if and how the column dendrogram should be reordered.
+#' Has the options as the Rowv argument above and additionally when x is a
+#' square matrix, Colv = "Rowv" means that columns should be treated
+#' identically to the rows.
+#' @param distfun function used to compute the distance (dissimilarity)
+#' between both rows and columns. Defaults to dist.
+#' @param hclustfun function used to compute the hierarchical clustering
+#' when Rowv or Colv are not dendrograms. Defaults to hclust.
+#'
+#' @param dist_method default is NULL (which results in "euclidean" to be used).
+#' Can accept alternative character strings indicating the
 #' method to be passed to distfun. By default distfun. is \link{dist} hence
-#' this can be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski".
-#' @param hclust_method default is NULL (which results in "complete" to be used). Can accept alternative character strings indicating the
+#' this can be one of "euclidean", "maximum", "manhattan", "canberra", "binary"
+#' or "minkowski".
+#' @param hclust_method default is NULL (which results in "complete" to be used).
+#' Can accept alternative character strings indicating the
 #' method to be passed to hclustfun By default hclustfun is \link{hclust} hence
 #' this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
 #'
@@ -54,28 +96,45 @@
 #' @param distfun_col distfun for row dendrogram only.
 #' @param hclustfun_col hclustfun for col dendrogram only.
 #'
-#' @param dendrogram character string indicating whether to draw 'none', 'row', 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv (or Colv) arguments are honoured.
-#' @param reorderfun function(d, w) of dendrogram and weights for reordering the row and column dendrograms. The default uses stats{reorder.dendrogram}
+#' @param dendrogram character string indicating whether to draw 'none', 'row',
+#' 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv)
+#' is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv
+#' (or Colv) arguments are honoured.
+#' @param reorderfun function(d, w) of dendrogram and weights for reordering the
+#' row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
-#' @param k_row an integer scalar with the desired number of groups by which to color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
+#' @param k_row an integer scalar with the desired number of groups by which to
+#' color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
 #' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
-#' @param k_col an integer scalar with the desired number of groups by which to color the dendrogram's branches in the columns (uses \link[dendextend]{color_branches})
+#' @param k_col an integer scalar with the desired number of groups by which to
+#' color the dendrogram's branches in the columns (uses \link[dendextend]{color_branches})
 #' If NA then \link[dendextend]{find_k} is used to deduce the optimal number of clusters.
 #'
-#' @param symm logical indicating if x should be treated symmetrically; can only be true when x is a square matrix.
+#' @param symm logical indicating if x should be treated symmetrically; can only
+#' be true when x is a square matrix.
 #' @param revC logical indicating if the column order should be reversed for plotting.
 #' Default (when missing) - is FALSE, unless symm is TRUE.
 #' This is useful for cor matrix.
 #'
+#' @param scale character indicating if the values should be centered and scaled
+#' in either the row direction or the column direction, or none. The default is
+#' "none".
+#' @param na.rm logical indicating whether NA's should be removed.
+#'
 #' @param row_dend_left logical (default is FALSE). Should the row dendrogram be
-#' plotted on the left side of the heatmap. If false then it will be plotted on the right
-#' side.
+#' plotted on the left side of the heatmap. If false then it will be plotted on
+#' the right side.
 #'
-#' @param margins numeric vector of length 4 (default is c(50,50,NA,0)) containing the margins (see \link[plotly]{layout}) for column, row and main title names, respectively.
-#' The top margin is NA by default. If main=="" then the top margin will be set to 0, otherwise it will get 30.
+#' @param margins numeric vector of length 4 (default is c(50,50,NA,0))
+#' containing the margins (see \link[plotly]{layout}) for column, row and main
+#' title names, respectively. The top margin is NA by default. If main==""
+#' then the top margin will be set to 0, otherwise it will get 30.
 #' For a multiline title a larger default for the 3rd element should be set.
+#' The right margin is NA by default, meaning it will be zero if row_dend_left
+#' is FALSE, or 100 if row_dend_left is TRUE.
 #'
-#' @param ... other parameters passed to \link{heatmapr} (currently, various parameters may be ignored.
+#' @param ... other parameters passed to \link{heatmapr} (currently, various
+#' parameters may be ignored.
 #'
 #' @param scale_fill_gradient_fun A function that creates a smooth gradient for the heatmap.
 #' The default uses \link[ggplot2]{scale_fill_gradientn} with the values of colors, limits, and
@@ -83,9 +142,15 @@
 #' \link{scale_color_gradient}() in order to get other results (although the virids default
 #' is quite recommended)
 #'
-#' @param grid_color control the color of the heatmap grid. Default is NA. Value passed to \link[ggplot2]{geom_tile}.
-#' Do not use this parameter on larger matrix sizes, as it can dramatically prolong the build time of the heatmap.
+#' @param grid_color control the color of the heatmap grid. Default is NA.
+#' Value passed to \link[ggplot2]{geom_tile}. Do not use this parameter on
+#' larger matrix sizes, as it can dramatically prolong the build time of the heatmap.
 #' (another parameter, grid_color, will be added in the future - once it is implemented in plotly)
+#' In the meantime it is MUCH better to use the grid_gap argument.
+#'
+#' @param grid_gap this is a fast alternative to grid_color. The default is 0, but if a larger value
+#' is used (for example, 1), then the resulting heatmap will have a white grid which can
+#' help identify different cells. This is implemented using \link[plotly]{style} (with xgap and ygap).
 #'
 #' @param srtRow if supplied, this overrides row_text_angle (this is to stay compatible with \link[gplots]{heatmap.2})
 #' @param srtCol if supplied, this overrides column_text_angle (this is to stay compatible with \link[gplots]{heatmap.2})
@@ -112,11 +177,23 @@
 #'    col_side_colors should be "wide", ie be the same dimensions
 #'    as the column side colors it will produce.
 #'
+#' @param row_side_palette,col_side_palette Color palette functions to be
+#'    used for row_side_colors and col_side_colors respectively.
+#'
 #' @param ColSideColors,RowSideColors passed to row_side_colors,col_side_colors in order
 #' to keep compatibility with \link[gplots]{heatmap.2}
 #'
-#' @param row_side_palette,col_side_palette Color palette functions to be
-#'    used for row_side_colors and col_side_colors respectively.
+#' @param plot_method Use "ggplot" or "plotly" to choose which library produces heatmap
+#' and dendrogram plots
+#' @param seriate character indicating the method of matrix sorting (default: "OLO").
+#' Implemented options include:
+#' "OLO" (Optimal leaf ordering, optimzes the Hamiltonian path length that is
+#' restricted by the dendrogram structure - works in O(n^4) )
+#' "mean" (sorts the matrix based on the reorderfun using marginal means of
+#' the matrix. This is the default used by \link[gplots]{heatmap.2}),
+#' "none" (the default order produced by the dendrogram),
+#' "GW" (Gruvaeus and Wainer heuristic to optimze the Hamiltonian path length
+#' that is restricted by the dendrogram structure)
 #'
 #' @param heatmap_layers ggplot object (eg, theme_bw()) to be added to
 #'  the heatmap before conversion to a plotly object.
@@ -126,12 +203,33 @@
 #' parameter is ignored (it is checked using \link[dendextend]{has_edgePar}("lwd")).
 #'
 #'
-#' @param file HTML file name to save the heatmaply into. Should be a character string ending with ".html".
+#' @param file HTML file name to save the heatmaply into. Should be a character
+#' string ending with ".html".
 #' For example: heatmaply(x, file = "heatmaply_plot.html").
 #' This should not include a directory, only the name of the file.
 #' You can relocate the file once it is created, or use \link{setwd} first.
 #' This is based on \link[htmlwidgets]{saveWidget}.
 #'
+#' @param long_data Data in long format. Replaces x, so both should not be used.
+#'  Colnames must be c("name", "variable", "value"). If you do not have a names
+#'  column you can simply use a sequence of numbers from 1 to the number of "rows"
+#'  inthe data.
+#'
+#' @param label_names Names for labells of x, y and value/fill mouseover.
+#' @param fontsize_row,fontsize_col,cexRow,cexCol Font size for row and column labels.
+#' @param subplot_widths,subplot_heights The relative widths and heights of each
+#'  subplot. The length of these vectors will vary depending on the number of
+#'  plots involved.
+#'
+#' @param colorbar_len The length of the colorbar/color key relative to the total
+#' plot height. Only used if plot_method = "plotly"
+#'
+#' @param colorbar_xanchor,colorbar_yanchor The x and y anchoring points of the
+#' colorbar/color legend. Can be "left", "middle" or "right" for colorbar_xanchor,
+#' and "top", "middle" or "bottom" for colorbar_yanchor.
+#' See \code{\link[plotly]{colorbar}} for more details.
+#' @param colorbar_xpos,colorbar_ypos The x and y co-ordinates (in proportion of the plot window)
+#' of the colorbar/color legend. See \code{\link[plotly]{colorbar}} for more details.
 #'
 #' @export
 #' @examples
@@ -144,6 +242,8 @@
 #' heatmaply(cor(iris[,-5]))
 #' heatmaply(cor(iris[,-5]), limits = c(-1,1))
 #' heatmaply(mtcars, k_row = 3, k_col = 2)
+#' # heatmaply(mtcars, k_row = 3, k_col = 2, grid_color = "white")
+#' heatmaply(mtcars, k_row = 3, k_col = 2, grid_gap = 1)
 #'
 #' # make sure there is enough room for the labels:
 #' heatmaply(mtcars, margins = c(40, 130))
@@ -229,10 +329,61 @@
 #'
 #' heatmaply(x, Rowv = row_dend, Colv = col_dend)
 #'
+#'
+#' heatmaply(is.na10(airquality))
+#' heatmaply(is.na10(airquality), grid_gap = 1)
+#'
+#' # grid_gap can handle quite large data matrix
+#' heatmaply(matrix(1:10000,100,100), k_row = 3, k_col = 3, grid_gap = 1)
+#'
+#' # Examples of playing with font size:
+#' heatmaply(mtcars, fontsize_col = 20, fontsize_row = 5, margin = c(100,90))
+#'
 #' }
 heatmaply <- function(x, ...) {
   UseMethod("heatmaply")
 }
+
+
+#' @export
+#' @description
+#' heatmaply_na is a wrapper for `heatmaply` which comes with defaults that are better
+#' for exploring missing value (NA) patters. Specifically, the grid_gap is set to 1, and the
+#' colors include two shades of grey. It also calculates the \link{is.na10} autmoatically.
+#' @rdname heatmaply
+#' @examples
+#' \dontrun{
+#' heatmaply_na(airquality)
+#' }
+heatmaply_na <- function(x,
+                         grid_gap = 1,
+                         colors = c("grey80", "grey20"),
+                         ...) {
+  heatmaply(is.na10(x), grid_gap = grid_gap,
+            colors = colors,...)
+}
+
+#' @export
+#' @description
+#' heatmaply_cor is a wrapper for `heatmaply` which comes with defaults that are better
+#' for correlation matrixes. Specifically, the limits are set from -1 to 1, and the color palette is \link{RdBu}.
+#' @rdname heatmaply
+#' @examples
+#' \dontrun{
+#' heatmaply_cor(cor(mtcars))
+#' }
+heatmaply_cor <- function(x,
+                         limits = c(-1,1),
+                         colors = RdBu,
+                         ...) {
+  heatmaply(x, limits = limits, # symm = TRUE,
+            colors = colors,...)
+}
+
+
+
+
+
 
 
 #' @export
@@ -246,10 +397,13 @@ heatmaply.default <- function(x,
                               row_text_angle = 0,
                               column_text_angle = 45,
                               subplot_margin = 0,
+                              cellnote = NULL,
+                              draw_cellnote = !is.null(cellnote),
+                              cellnote_color = "white",
 
                               ## dendrogram control
-                              Rowv = TRUE,
-                              Colv = if (symm) "Rowv" else TRUE,
+                              Rowv,
+                              Colv,
                               distfun = dist,
                               hclustfun = hclust,
                               dist_method = NULL,
@@ -263,19 +417,24 @@ heatmaply.default <- function(x,
                               dendrogram = c("both", "row", "column", "none"),
                               reorderfun = function(d, w) reorder(d, w),
 
-                              k_row,
-                              k_col,
+                              k_row = 1,
+                              k_col = 1,
 
                               symm = FALSE,
                               revC,
 
+                              ## data scaling
+                              scale = c("none", "row", "column"),
+                              na.rm = TRUE,
+
                               row_dend_left = FALSE,
-                              margins = c(50, 50, NA, 0),
+                              margins = c(NA, NA, NA, NA),
                               ...,
                               scale_fill_gradient_fun = scale_fill_gradientn(
                                 colors = if(is.function(colors)) colors(256) else colors,
                                 na.value = na.value, limits = limits),
                               grid_color = NA,
+                              grid_gap = 0,
                               srtRow, srtCol,
                               xlab = "", ylab = "",
                               main = "",
@@ -283,25 +442,58 @@ heatmaply.default <- function(x,
                               hide_colorbar = FALSE,
                               key.title = NULL,
                               return_ppxpy = FALSE,
-                              row_side_colors = NULL,
+                              row_side_colors,
                               row_side_palette,
-                              col_side_colors = NULL,
+                              col_side_colors,
                               col_side_palette,
                               ColSideColors = NULL,
                               RowSideColors = NULL,
+                              seriate = c("OLO", "mean", "none", "GW"),
                               heatmap_layers = NULL,
                               branches_lwd = 0.6,
-                              file
-) {
-  ## Suppress creation of new graphcis device, but on exit replace it.
-  old_dev <- options()[["device"]]
-  on.exit(options(device = old_dev))
-  options(device = names(capabilities()[which(capabilities())])[1])
+                              file,
+                              long_data,
+                              plot_method = c("ggplot", "plotly"),
+                              label_names = c("row", "column", "value"),
+                              fontsize_row = 10,
+                              fontsize_col = 10,
+                              cexRow, cexCol,
+                              subplot_widths = NULL,
+                              subplot_heights = NULL,
+                              colorbar_len = 0.3,
+                              colorbar_xanchor = if(row_dend_left) "right" else "left",
+                              colorbar_yanchor = "bottom",
+                              colorbar_xpos = if(row_dend_left) -0.1 else 1.1,
+                              colorbar_ypos = 0,
+                              col) {
+
+  if (!missing(long_data)) {
+    if (!missing(x)) warning("x and long_data should not be used together")
+    assert_that(
+      ncol(long_data) == 3,
+      all(colnames(long_data) == c("name", "variable", "value"))
+    )
+    x <- reshape2::dcast(long_data, name ~ variable)
+    rownames(x) <- x$name
+    x$name <- NULL
+  }
+
+  # this is to fix the error: "argument * matches multiple formal arguments"
+  if(!missing(col)) colors <- col
+
+  plot_method <- match.arg(plot_method)
+
+  if (plot_method == "ggplot") {
+    ## Suppress creation of new graphcis device, but on exit replace it.
+    ## TODO: Avoid this or find better method
+    old_dev <- options()[["device"]]
+    on.exit(options(device = old_dev))
+    options(device = names(capabilities()[which(capabilities())])[1])
+  }
 
   dendrogram <- match.arg(dendrogram)
 
   if(!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
-
 
   if(!missing(srtRow)) row_text_angle <- srtRow
   if(!missing(srtCol)) column_text_angle <- srtCol
@@ -313,6 +505,8 @@ heatmaply.default <- function(x,
     row_side_colors <- RowSideColors
   }
 
+  if (!missing(cexRow)) fontsize_row <- cexRow
+  if (!missing(cexCol)) fontsize_col <- cexCol
 
   # TODO: maybe create heatmaply.data.frame heatmaply.matrix instead.
   #       But right now I am not sure this would be needed.
@@ -329,7 +523,7 @@ heatmaply.default <- function(x,
   # If we have non-numeric columns, we should move them to row_side_colors
   # TODO: add a parameter to control removing of non-numeric columns without moving them to row_side_colors
   if(!all(ss_c_numeric)) {
-    row_side_colors <- if (is.null(row_side_colors)) {
+    row_side_colors <- if (missing(row_side_colors)) {
       data.frame(x[, !ss_c_numeric, drop= FALSE])
     } else {
       data.frame(row_side_colors, x[, !ss_c_numeric, drop= FALSE])
@@ -342,10 +536,16 @@ heatmaply.default <- function(x,
   if(dendrogram == "column") Rowv <- FALSE
   if(dendrogram == "none") Rowv <- Colv <- FALSE
 
+  # this also occurs in heatmapr, so it may be o.k. to remove the following line.
+  seriate <- match.arg(seriate)
+  if (is.numeric(cellnote_color)) cellnote_color <- grDevices::palette()[cellnote_color]
 
   hm <- heatmapr(x,
     row_side_colors = row_side_colors,
     col_side_colors = col_side_colors,
+    seriate = seriate,
+
+    cellnote = cellnote,
 
     ## dendrogram control
     Rowv = Rowv,
@@ -369,16 +569,20 @@ heatmaply.default <- function(x,
     symm = symm,
     revC = revC,
 
+    ## data scaling
+    scale = scale,
+    na.rm = na.rm,
+
     ...)
-  hmly <- heatmaply.heatmapr(hm, # colors = colors, limits = limits,
+  hmly <- heatmaply.heatmapr(hm, colors = colors, limits = limits,
                      scale_fill_gradient_fun = scale_fill_gradient_fun,
                      grid_color = grid_color,
+                     grid_gap = grid_gap,
                      row_text_angle = row_text_angle,
                      column_text_angle = column_text_angle,
                      subplot_margin = subplot_margin,
-
                      row_dend_left = row_dend_left,
-                     xlab=xlab, ylab=ylab, main = main,
+                     xlab = xlab, ylab = ylab, main = main,
                      titleX = titleX, titleY = titleY,
                      hide_colorbar = hide_colorbar,
                      key.title = key.title,
@@ -388,11 +592,25 @@ heatmaply.default <- function(x,
                      row_side_palette = row_side_palette,
                      col_side_colors = col_side_colors,
                      col_side_palette = col_side_palette,
+                     heatmap_layers = heatmap_layers,
                      ColSideColors = ColSideColors,
                      RowSideColors = RowSideColors,
-                     heatmap_layers = heatmap_layers,
-                     branches_lwd = branches_lwd
-                ) # TODO: think more on what should be passed in "..."
+                     branches_lwd = branches_lwd,
+                     label_names = label_names,
+                     plot_method = plot_method,
+                     draw_cellnote = draw_cellnote,
+                     cellnote_color = cellnote_color,
+                     fontsize_row = fontsize_row,
+                     fontsize_col = fontsize_col,
+                     subplot_widths = subplot_widths,
+                     subplot_heights = subplot_heights,
+                     colorbar_len = colorbar_len,
+                     colorbar_xanchor = colorbar_xanchor,
+                     colorbar_yanchor = colorbar_yanchor,
+                     colorbar_xpos = colorbar_xpos,
+                     colorbar_ypos = colorbar_ypos)
+
+                     # TODO: think more on what should be passed in "..."
 
   if(!missing(file)) hmly %>% saveWidget(file = file, selfcontained = TRUE)
 
@@ -405,102 +623,15 @@ heatmaply.default <- function(x,
 
 
 
-# xx is a data matrix
-ggplot_heatmap <- function(xx,
-                           row_text_angle = 0,
-                           column_text_angle = 45,
-                           scale_fill_gradient_fun =
-                             scale_fill_gradientn(colors = viridis(n=256, alpha = 1, begin = 0,
-                                                                   end = 1, option = "viridis"),
-                                                  na.value = "grey50", limits = NULL),
-                           grid_color = NA,
-                           grid_size = 0.1,
-                           key.title = NULL,
-                           layers,
-                           row_dend_left = FALSE,
-                           ...) {
-  theme_clear_grid_heatmap <- theme(axis.line = element_line(color = "black"),
-                                    panel.grid.major = element_blank(),
-                                    panel.grid.minor = element_blank(),
-                                    panel.border = element_blank(),
-                                    panel.background = element_blank())
-  # heatmap
-  # xx <- x$matrix$data
-  if(!is.data.frame(df)) df <- as.data.frame(xx)
-  # colnames(df) <- x$matrix$cols
-  df$row <- if(!is.null(rownames(xx)))
-              {rownames(xx)} else
-              {1:nrow(xx)}
-  df$row <- with(df, factor(row, levels=row, ordered=TRUE))
-  mdf <- reshape2::melt(df, id.vars="row")
-  colnames(mdf)[2] <- "column" # rename "variable"
-  # TODO:
-  # http://stackoverflow.com/questions/15921799/draw-lines-around-specific-areas-in-geom-tile
-  # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-  p <- ggplot(mdf, aes_string(x = "column", y = "row")) +
-    geom_tile(aes_string(fill = "value"), color = grid_color, size = grid_size) +
-    # scale_linetype_identity() +
-    # scale_fill_viridis() +
-    coord_cartesian(expand = FALSE) +
-    scale_fill_gradient_fun +
-    theme_bw()+ theme_clear_grid_heatmap +
-    theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1),
-          axis.text.y = element_text(angle = row_text_angle, hjust = 1)
-          )
-
-  if(!missing(layers)) p <- p + layers
-    ## Passed in to allow users to alter (courtesy of GenVisR)
-
-  # p <- p + scale_x_discrete(limits = unique(mdf))
-  # http://stats.stackexchange.com/questions/5007/how-can-i-change-the-title-of-a-legend-in-ggplot2
-  p <- p + labs(fill=key.title)
-
-  # until this bug is fixed: https://github.com/ropensci/plotly/issues/699
-  # we are forced to use geom_hline and geom_vline
-  if(!is.na(grid_color)) {
-    p <- p + geom_hline(yintercept =c(0:nrow(xx))+.5, color = grid_color) # , size = grid_size # not implemented since it doesn't work with plotly
-    p <- p + geom_vline(xintercept =c(0:ncol(xx))+.5, color = grid_color) # , size = grid_size # not implemented since it doesn't work with plotly
-
-  }
-
-  if(row_dend_left) p <- p + scale_y_discrete(position = "right") # possible as of ggplot 2.1.0 !
-
-  p
-}
 
 
 
-
-
-
-
-
-#
-# library(ggplot2)
-# library(plotly)
-# # library(heatmaply)
-# ggplot_heatmap <- heatmaply:::ggplot_heatmap
-# class_to <- function(x, new_class) {
-#   class(x) <- new_class
-#   x
-# }
-# na_mat <- function(x) {
-#   x %>% is.na %>% class_to("numeric")
-# }
-#
-# p <- heatmaply:::ggplot_heatmap(na_mat(airquality),
-#                     scale_fill_gradient_fun = scale_fill_gradientn(colors= c("white","black")) ,
-#                     grid_color = "grey", grid_size = 1)
-# plot(p)
-# ggplotly(p)
-# p <- ggplot_heatmap(mtcars,
-#                     grid_color = white")
-# p
-#
 heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
-                                          row_dend_left, subplot_margin = 0,
+                                          row_dend_left = FALSE, subplot_margin = 0,
                                           titleX = TRUE, titleY = TRUE,
-                                          widths=NULL, heights=NULL, ...) {
+                                          widths=NULL, heights=NULL,
+                                          plot_method, ...) {
+
   if (is.null(widths)) {
     if (!is.null(px)) {
       if (is.null(pr)) {
@@ -522,7 +653,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
       if (is.null(pc)) {
         heights <- c(0.2, 0.8)
       } else {
-        heights <- c(0.2, 0.1, 0.7)
+        heights <- c(0.2, 0.05, 0.7)
       }
     } else {
       if (is.null(pc)) {
@@ -556,30 +687,66 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
   ind_null_row <- sapply(row3_list, is.null)
   ind_remove_row <- rep(ind_null_row, length.out = length(plots))
 
+
+  if (sum(!ind_null_col) != length(heights)) {
+    stop(paste("Number of subplot_heights supplied is not correct; should be",
+      sum(!ind_null_col), "but is", length(heights)))
+  }
+  if (sum(!ind_null_row) != length(widths)) {
+    stop(paste("Number of subplot_widths supplied is not correct; should be",
+      sum(!ind_null_row), "but is", length(widths)))
+  }
+
   ## Remove all null plots
   plots <- plots[!(ind_remove_row | ind_remove_col)]
 
+
   ## Interim solution before removing warnings in documented way
-  suppressMessages(suppressWarnings(
-    s <- subplot(plots,
-      nrows = nrows,
-      widths = if(row_dend_left) rev(widths) else widths,
-      shareX = TRUE, shareY = TRUE,
-      titleX = titleX, titleY = titleY,
-      margin = subplot_margin,
-      heights = heights)
-  ))
+  suppressMessages(
+    suppressWarnings(
+      s <- subplot(plots,
+        nrows = nrows,
+        widths = if(row_dend_left) rev(widths) else widths,
+        shareX = TRUE, shareY = TRUE,
+        titleX = titleX, titleY = titleY,
+        margin = subplot_margin,
+        heights = heights)
+      )
+  )
+
+  if (plot_method == "plotly") {
+    if (row_dend_left) {
+      num_rows <- sum(!ind_null_row)
+      str <- ifelse(num_rows > 1, num_rows, "")
+      l <- list(
+        anchor = paste0("x", str),
+        side = "right",
+        showticklabels=TRUE
+      )
+      num_cols <- sum(!ind_null_col)
+      if (num_cols == 1) {
+        lay <- function(p) layout(p, yaxis = l)
+      } else if (num_cols == 2) {
+        lay <- function(p) layout(p, yaxis2 = l)
+      } else if (num_cols == 3) {
+        lay <- function(p) layout(p, yaxis3 = l)
+      }
+      s <- lay(s)
+    }
+  }
+
+
+  # s <- subplot(plots,
+  #   nrows = nrows,
+  #   widths = if(row_dend_left) rev(widths) else widths,
+  #   shareX = TRUE, shareY = TRUE,
+  #   titleX = titleX, titleY = titleY,
+  #   margin = subplot_margin,
+  #   heights = heights)
+
+
   return(s)
 }
-
-
-
-
-
-
-
-
-
 
 #' @export
 #' @rdname heatmaply
@@ -594,12 +761,13 @@ heatmaply.heatmapr <- function(x,
                                subplot_margin = 0,
 
                                row_dend_left = FALSE,
-                               margins = c(50, 50, NA, 0),
+                               margins = c(NA, NA, NA, NA),
                                ...,
                                scale_fill_gradient_fun = scale_fill_gradientn(
                                  colors = if(is.function(colors)) colors(256) else colors,
                                  na.value = na.value, limits = limits),
                                grid_color = NA,
+                               grid_gap = 0,
                                srtRow, srtCol,
                                xlab = "", ylab = "",
                                main = "",
@@ -607,25 +775,47 @@ heatmaply.heatmapr <- function(x,
                                hide_colorbar = FALSE,
                                key.title = NULL,
                                return_ppxpy = FALSE,
-                               row_side_colors = NULL,
+                               draw_cellnote = FALSE,
+                               cellnote_color = "white",
+                               row_side_colors,
                                row_side_palette,
-                               col_side_colors = NULL,
+                               col_side_colors,
                                col_side_palette,
-                               ColSideColors = NULL,
-                               RowSideColors = NULL,
+                               plot_method = c("ggplot", "plotly"),
+                               ColSideColors,
+                               RowSideColors,
                                heatmap_layers = NULL,
-                               branches_lwd = 0.6
-                               ) {
+                               branches_lwd = 0.6,
+                               label_names,
+                               fontsize_row = 10,
+                               fontsize_col = 10,
+                               subplot_widths = NULL,
+                               subplot_heights = NULL,
+                               colorbar_xanchor = if(row_dend_left) "right" else "left",
+                               colorbar_yanchor = "bottom",
+                               colorbar_xpos = if(row_dend_left) -0.1 else 1.1,
+                               colorbar_ypos = 0,
+                               colorbar_len = 0.3) {
+
+  plot_method <- match.arg(plot_method)
+
   # informative errors for mis-specified limits
   if(!is.null(limits)) {
     if(!is.numeric(limits)) stop("limits must be numeric")
     if(length(limits) != 2L) stop("limits must be of length 2 (i.e.: two dimensional)")
 
-    r <- range(x)
-    l <- sort(limits)
+    r <- range(as.matrix(x$matrix$data), na.rm = TRUE)
+    limits <- sort(limits)
+
     ## Warn for broken heatmap colors
-    if (r[1] < l[1]) warning("Lower limit is not below lowest value in x, colors will be broken!")
-    if (r[2] > l[2]) warning("Upper limit is not above highest value in x, colors will be broken!")
+    if (limits[1] > r[1]) {
+      limits[1] <- r[1]
+      warning("Lower limit is not <= lowest value in x, min of limits is set to the min of the range (otherwise, colors will be broken!)")
+    }
+    if (limits[2] < r[2]) {
+      limits[2] <- r[2]
+      warning("Upper limit is not >= highest value in x, max of limits is set to the max of the range (otherwise, colors will be broken!)")
+    }
   }
   if(!missing(srtRow)) row_text_angle <- srtRow
   if(!missing(srtCol)) column_text_angle <- srtCol
@@ -633,8 +823,6 @@ heatmaply.heatmapr <- function(x,
   # x is a heatmapr object.
   # heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx, image = imgUri,
   #                  theme = theme, options = options)
-  # TODO: we assume the creation of dendrograms. Other defaults should be made when the user
-  #     chooses to not work with dendrograms.
   # x <- heatmapr(mtcars)
   # source: http://stackoverflow.com/questions/6528180/ggplot2-plot-without-axes-legends-etc
   theme_clear_grid_dends <- theme(axis.line=element_blank(),axis.text.x=element_blank(),
@@ -658,59 +846,132 @@ heatmaply.heatmapr <- function(x,
   if(is.null(cols)) {
     py <- NULL
   } else {
-    py <- ggplot(cols, labels  = FALSE) + theme_bw() +
-      coord_cartesian(expand = FALSE) +
-      theme_clear_grid_dends
+    if (plot_method == "ggplot") {
+      col_ggdend <- as.ggdend(cols)
+      xlims <- c(0.5, nrow(col_ggdend$labels) + 0.5)
+      py <- ggplot(cols, labels  = FALSE) + theme_bw() +
+        coord_cartesian(expand = FALSE, xlim = xlims) +
+        theme_clear_grid_dends
+    } else {
+      suppressWarnings(      py <- plotly_dend(cols, side = "col"))
+    }
   }
   if(is.null(rows)) {
     px <- NULL
   } else {
-    px <- ggplot(rows, labels  = FALSE) +
-      # coord_cartesian(expand = FALSE) +
-      coord_flip(expand = FALSE) + theme_bw() + theme_clear_grid_dends
-    if(row_dend_left) px <- px + scale_y_reverse()
+    if (plot_method == "ggplot") {
+      row_ggdend <- as.ggdend(rows)
+      ylims <- c(0.5, nrow(row_ggdend$labels) + 0.5)
+
+      px <- ggplot(row_ggdend, labels  = FALSE) +
+        # coord_cartesian(expand = FALSE) +
+        coord_flip(expand = FALSE, xlim = ylims) +
+        theme_bw() +
+        theme_clear_grid_dends
+      if(row_dend_left) px <- px + scale_y_reverse()
+    } else {
+      px <- plotly_dend(rows, flip = row_dend_left, side = "row")
+    }
   }
   # create the heatmap
   data_mat <- x$matrix$data
-  p <- ggplot_heatmap(data_mat,
+
+  if (plot_method == "ggplot") {
+    p <- ggplot_heatmap(data_mat,
                       row_text_angle,
                       column_text_angle,
                       scale_fill_gradient_fun,
                       grid_color,
                       key.title = key.title,
                       layers = heatmap_layers,
-                      row_dend_left = row_dend_left)
-  if(return_ppxpy) {
-    return(list(p=p, px=px, py=py))
-  }
-  if (is.null(row_side_colors)) pr <- NULL
-  else {
-    pr <- side_color_plot(x[["row_side_colors"]], type = "row",
-      palette = row_side_palette, is_colors = !is.null(RowSideColors))
-  }
-  if (is.null(col_side_colors)) pc <- NULL
-  else {
+                      row_dend_left = row_dend_left,
+                      label_names = label_names,
+                      fontsize_row = fontsize_row, fontsize_col = fontsize_col)
+  } else if (plot_method == "plotly") {
 
+    p <- plotly_heatmap(data_mat, limits = limits, colors = colors,
+      key_title = key.title,
+      row_text_angle = row_text_angle, column_text_angle = column_text_angle,
+      fontsize_row = fontsize_row, fontsize_col = fontsize_col,
+      colorbar_yanchor = colorbar_yanchor, colorbar_xanchor = colorbar_xanchor,
+      colorbar_xpos = colorbar_xpos, colorbar_ypos = colorbar_ypos,
+      colorbar_len = colorbar_len)
+  }
+
+
+  # TODO: Add native plotly sidecolor function.
+  # TODO: Possibly use function to generate all 3 plots to prevent complex logic here
+  if (missing(row_side_colors)) {
+    pr <- NULL
+  } else {
+    side_color_df <- x[["row_side_colors"]]
+    if (is.matrix(side_color_df)) side_color_df <- as.data.frame(side_color_df)
+    assert_that(
+      nrow(side_color_df) == nrow(data_mat),
+      is.data.frame(side_color_df)
+    )
+    pr <- side_color_plot(x[["row_side_colors"]], type = "row",
+      text_angle = column_text_angle,
+      palette = row_side_palette,
+      is_colors = !is.null(RowSideColors), label_name = label_names[[1]])
+  }
+
+  if (missing(col_side_colors)) {
+    pc <- NULL
+  } else {
     warning("The hover text for col_side_colors is currently not implemented (due to an issue in plotly). We hope this would get resolved in future releases.")
 
-    ## Have to transpose, otherwise it is the wrong orientation
-    side_color_df <- data.frame(t(x[["col_side_colors"]]))
-
+    side_color_df <- x[["col_side_colors"]]
+    if (is.matrix(side_color_df)) side_color_df <- as.data.frame(side_color_df)
+    assert_that(
+      nrow(side_color_df) == ncol(data_mat),
+      is.data.frame(side_color_df)
+    )
     ## Just make sure it's character first
     side_color_df[] <- lapply(side_color_df, as.character)
     pc <- side_color_plot(side_color_df, type = "column",
-      palette = col_side_palette, is_colors = !is.null(ColSideColors))
+      text_angle = row_text_angle,
+      palette = col_side_palette,
+      is_colors = !is.null(ColSideColors),
+      label_name = label_names[[2]]
+    )
+  }
+
+  if(return_ppxpy) {
+    return(list(p=p, px=px, py=py, pr=pr, pc=pc))
   }
 
   ## plotly:
-  # turn p, px, and py to plotly objects
-  p <- ggplotly(p)
-  if(!is.null(px)) {
-    px <- ggplotly(px, tooltip = "y")
+  # turn p, px, and py to plotly objects if necessary
+  if (!is.plotly(p)) p <- ggplotly(p) %>% layout(showlegend=FALSE)
+  if (draw_cellnote) {
+    df <- as.data.frame(x[["cellnote"]])
+
+    df$row <- 1:nrow(df)
+    mdf <- reshape2::melt(df, id.vars="row")
+    mdf$variable <- factor(mdf$variable, levels = p$x$layout$xaxis$ticktext)
+    mdf$variable <- as.numeric(mdf$variable)
+    mdf$value <- factor(mdf$value)
+
+    p <- p %>% add_trace(y = mdf$row, x = mdf$variable, text = mdf$value,
+        type = "scatter", mode = "text", textposition = "middle right",
+        hoverinfo = "none",
+        textfont = list(color = plotly::toRGB(cellnote_color), size = 16))
+    # p <- p %>% add_trace(data = mdf, type = "scatter", mode = "text",
+    #     textfont = list(color = '#000000', size = 16),
+    #     textposition = "middle left",
+    #     y = ~row, x = ~variable, text = ~value)
+
   }
-  if(!is.null(py)) {
-    py <- ggplotly(py, tooltip = "y")
+  if (!is.null(px) && !is.plotly(px)) {
+    px <- ggplotly(px, tooltip = "y") %>%
+      layout(showlegend=FALSE)
   }
+  if (!is.null(py) && !is.plotly(py)) {
+    py <- ggplotly(py, tooltip = "y") %>%
+      layout(showlegend=FALSE)
+  }
+
   # https://plot.ly/r/reference/#Layout_and_layout_style_objects
   p <- layout(p,              # all of layout's properties: /r/reference/#layout
               title = main, # layout's title: /r/reference/#layout-title
@@ -721,199 +982,55 @@ heatmaply.heatmapr <- function(x,
               yaxis = list(           # layout's yaxis is a named list. List of valid keys: /r/reference/#layout-yaxis
                 title = ylab      # yaxis's title: /r/reference/#layout-yaxis-title
               ))
-  if(hide_colorbar) {
+  if (hide_colorbar) {
     p <- hide_colorbar(p)
     # px <- hide_colorbar(px)
     # py <- hide_colorbar(py)
   }
 
-  # TODO: this doesn't work because of the allignment. But using this might
-  # speedup the code to deal with MUCH larger matrices.
-  # p <- plot_ly(z = xx, type = "heatmap")
-  # p <- plot_ly(z = xx, type = "heatmap")
-  # ggplotly(p) # works great
-  # source for: theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1))
-  # http://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2
-  # if(row_dend_left) p <- p + scale_y_reverse()
-  # # hide axis ticks and grid lines
-  # eaxis <- list(
-  #   showticklabels = FALSE,
-  #   showgrid = FALSE,
-  #   zeroline = FALSE
-  # )
-  # p_empty <- plot_ly() %>%
-  #   # note that margin applies to entire plot, so we can
-  #   # add it here to make tick labels more readable
-  #   layout(margin = list(l = 200),
-  #          xaxis = eaxis,
-  #          yaxis = eaxis)
-  top_corner <- plotly_empty()
-  # top_corner <- ggplotly(qplot(as.numeric(xx), geom="histogram"))
-  # create the subplot
-
   # Adjust top based on whether main is empty or not.
-  if(is.na(margins[3])) margins[3] <- ifelse(main == "", 0, 30)
+  if (is.na(margins[3])) margins[3] <- ifelse(main == "", 0, 30)
+
+
+  min_marg_row <- calc_margin(rownames(data_mat),
+    fontsize = p$x$layout$yaxis$tickfont$size)
+  if (row_dend_left && is.na(margins[4])) {
+    margins[4] <- min_marg_row
+  } else if (!row_dend_left && is.na(margins[2])) {
+    margins[2] <- min_marg_row
+  }
+  if (is.na(margins[1])) {
+    margins[1] <- calc_margin(colnames(data_mat),
+        fontsize = p$x$layout$yaxis$tickfont$size)
+  }
+
+  # add a white grid
+  if(grid_gap > 0) {
+    p <- style(p, xgap = grid_gap, ygap = grid_gap)
+    # doesn't seem to work.
+    # if(!is.null(pr)) pr <- style(pr, xgap = grid_gap)
+    # if(!is.null(pc)) pc <- style(pc, ygap = grid_gap)
+  }
 
   heatmap_subplot <- heatmap_subplot_from_ggplotly(p = p, px = px, py = py,
     row_dend_left = row_dend_left, subplot_margin = subplot_margin,
-    titleX = titleX, titleY = titleY, pr = pr, pc = pc)
-  l <- layout(heatmap_subplot, showlegend = FALSE)  %>%
-    layout(margin = list(l = margins[2], b = margins[1], t = margins[3], r = margins[4]))
-  # print(l)
+    titleX = titleX, titleY = titleY, pr = pr, pc = pc, plot_method = plot_method)
+  l <- layout(heatmap_subplot,
+      margin = list(l = margins[2], b = margins[1], t = margins[3], r = margins[4]),
+      legend = list(y=1, yanchor="top")
+    )
 
-
-
-  # clean the modeBarButtons from irrelevent icons
-  # l$x$config$modeBarButtonsToRemove <- list("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverCompareCartesian", "sendDataToCloud")
-  # l <- config(l, displaylogo = FALSE, collaborate = FALSE) # ,
-  #             #modeBarButtonsToRemove = list("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverClosestCartesian", "hoverCompareCartesian", "sendDataToCloud"))
+  # keep only relevant plotly options
   l <- config(l, displaylogo = FALSE, collaborate = FALSE,
         modeBarButtonsToRemove = c("sendDataToCloud", "select2d", "lasso2d","autoScale2d", "hoverClosestCartesian", "hoverCompareCartesian", "sendDataToCloud"))
 
-
   l
+
 }
 
+## TODO: Better/safer estimation of total size, or use monospace.
+calc_margin <- function(labels, fontsize) {
+    max(nchar(labels) * fontsize, na.rm = TRUE) * 0.6
+  # http://stackoverflow.com/questions/19113725/what-dependency-between-font-size-and-width-of-char-in-monospace-font
 
-
-
-
-
-
-
-
-
-# theme_set(theme_cowplot())
-# library(cowplot)
-# require2(cowplot)
-#
-if(FALSE) {
-  # devtools::install_github("ropensci/plotly", ref = "fix/subplot")
-  # devtools::install_github('talgalili/heatmaply')
-  library(ggplot2)
-  library(dendextend)
-  library(plotly)
-  library(viridis)
-  #dendogram data
-  x <- as.matrix(scale(mtcars))
-  dd.col <- as.dendrogram(hclust(dist(x)))
-  dd.row <- as.dendrogram(hclust(dist(t(x))))
-  dd.col <- color_branches(dd.col, k = 3)
-  dd.row <- color_branches(dd.row, k = 2)
-  px <- ggplot(dd.row, labels  = FALSE) + theme_bw()
-  py <- ggplot(dd.col, labels  = FALSE) + coord_flip()+ theme_bw()
-  # heatmap
-  col.ord <- order.dendrogram(dd.col)
-  row.ord <- order.dendrogram(dd.row)
-  xx <- scale(mtcars)[col.ord, row.ord]
-  xx_names <- attr(xx, "dimnames")
-  df <- as.data.frame(xx)
-  colnames(df) <- xx_names[[2]]
-  df$car <- xx_names[[1]]
-  df$car <- with(df, factor(car, levels=car, ordered=TRUE))
-  mdf <- reshape2::melt(df, id.vars="car")
-  # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-  p <- ggplot(mdf, aes(x = variable, y = car)) + geom_tile(aes(fill = value)) +
-    scale_fill_viridis() + theme_bw() +
-    theme(axis.text.x = element_text(angle = column_text_angle, hjust = 1))
-  # p <- plot_ly(z = xx, type = "heatmap")
-  # ggplotly(p) # works great
-  # ggplotly(p, tooltip = "none")
-  # ggplotly(px, tooltip = "")
-  #
-  # # hide axis ticks and grid lines
-  # eaxis <- list(
-  #   showticklabels = FALSE,
-  #   showgrid = FALSE,
-  #   zeroline = FALSE
-  # )
-  # p_empty <- plot_ly() %>%
-  #   # note that margin applies to entire plot, so we can
-  #   # add it here to make tick labels more readable
-  #   layout(margin = list(l = 200),
-  #          xaxis = eaxis,
-  #          yaxis = eaxis)
-  s <- subplot(px, plotly_empty(), p, py, nrows = 2, widths = c(.8,.2), heights = c(.2,.8), margin = 0,
-               shareX = TRUE, shareY = TRUE, titleX = titleX, titleY = titleY)
-  layout(s, showlegend = FALSE)
-}
-
-
-#'
-#' geom_tile for side color plots
-#'
-#' @param df A "molten" data.frame as produced by (eg) reshape2::melt
-#' @param palette A function which can return colors to be used in the sidebar
-#' plot
-#' @param scale_title Title of the color scale. Not currently used.
-#' @param type Horizontal or vertical plot? Valid values are "column" and "row"
-#' @param row_text_angle,column_text_angle the angle of the text of the rows/columns.
-#' @param is_colors Use if the values in df are valid colours and should not be mapped
-#'  to a color scheme, and instead should be plotted directly.
-#'
-#' @return A ggplot geom_tile object
-#'
-#' @export
-side_color_plot <- function(df, palette,
-  scale_title = paste(type, "side colors"), type = c("column", "row"),
-  row_text_angle, column_text_angle, is_colors) {
-
-  if (is.matrix(df)) df <- as.data.frame(df)
-  stopifnot(is.data.frame(df))
-
-  ## TODO: Find out why names are dropped when dim(df)[2] == 1
-  original_dim <- dim(df)
-
-  if (missing(column_text_angle)) column_text_angle <- 0
-  if (missing(row_text_angle)) row_text_angle <- 45
-  if (missing(palette)) palette <- colorspace::rainbow_hcl
-
-  type <- match.arg(type)
-  if (type %in% colnames(df))
-    stop("Having", type, "in the colnames of the side_color df will drop data!")
-
-  df[[type]] <- if(!is.null(rownames(df))) rownames(df) else 1:nrow(df)
-
-  df[[type]] <- factor(df[[type]], levels = df[[type]], ordered = TRUE)
-  df <- reshape2::melt(df, id.vars = type)
-  df[["value"]] <- factor(df[["value"]])
-
-  id_var <- colnames(df)[1]
-  if (type == "column") {
-    mapping <- aes_string(x = id_var, y = 'variable', fill = 'value')
-    if(original_dim[2] > 1) {
-      text_element <- element_text(angle = column_text_angle)
-    } else text_element <- element_blank()
-
-    theme <- theme(
-        panel.background = element_blank(),
-        axis.text.x = element_blank(),
-        axis.text.y = text_element,
-        axis.ticks = element_blank())
-  } else {
-    if(original_dim[2] > 1) {
-      text_element <- element_text(angle = row_text_angle)
-    } else text_element <- element_blank()
-
-    mapping <- aes_string(x = 'variable', y = id_var, fill = 'value')
-    theme <- theme(
-        panel.background = element_blank(),
-        axis.text.x = text_element,
-        axis.text.y = element_blank(),
-        axis.ticks = element_blank())
-  }
-
-  color_vals <- if (is_colors) levels(df[["value"]])
-  else palette(length(unique(df[["value"]])))
-
-  g <- ggplot(df, mapping = mapping) +
-    geom_raster() +
-    xlab("") +
-    ylab("") +
-    scale_fill_manual(
-      name = NULL,
-      breaks = levels(df[["value"]]),
-      values = color_vals) +
-    theme
-  return(g)
 }

@@ -35,32 +35,102 @@ heatmaply(mtcars)
 ## ------------------------------------------------------------------------
 heatmaply(mtcars, xlab = "Features", ylab = "Cars", 
 		main = "An example of title and xlab/ylab",
-		margins = c(60,100,40,20) )
-# heatmaply(mtcars) %>% layout(margin = list(l = 130, b = 40))
+		margins = c(60,100,40,20))
 
 ## ------------------------------------------------------------------------
 heatmaply(cor(mtcars), margins = c(40, 40),
           k_col = 2, k_row = 2,
           limits = c(-1,1))
+# Better to use:
+# heatmaply_cor(cor(mtcars), margins = c(40, 40),
+#           k_col = 2, k_row = 2)
+
+
+## ------------------------------------------------------------------------
+heatmaply(mtcars, xlab = "Features", ylab = "Cars", 
+          scale = "column",
+		main = "Data transformation using 'scale'",
+		margins = c(60,100,40,20))
+
+## ------------------------------------------------------------------------
+heatmaply(normalize(mtcars), xlab = "Features", ylab = "Cars", 
+		main = "Data transformation using 'scale'",
+		margins = c(60,100,40,20))
+
+## ------------------------------------------------------------------------
+heatmaply(percentize(mtcars), xlab = "Features", ylab = "Cars", 
+		main = "Data transformation using 'scale'",
+		margins = c(60,100,40,20))
+
+## ------------------------------------------------------------------------
+
+library(heatmaply)
+
+heatmaply(is.na10(airquality), grid_gap = 1,
+            k_col =3, k_row = 3,
+            margins = c(55, 30),
+            colors = c("grey80", "grey20"))
+# Better to use:
+# heatmaply_na(airquality, k_col =3, k_row = 3,
+            # margins = c(55, 30))
+
+
+# warning - using grid_color cannot handle a large matrix!
+# airquality[1:10,] %>% is.na10 %>% 
+#   heatmaply(color = c("white","black"), grid_color = "grey",
+#             k_col =3, k_row = 3,
+#             margins = c(40, 50)) 
+# airquality %>% is.na10 %>% 
+#   heatmaply(color = c("grey80", "grey20"), # grid_color = "grey",
+#             k_col =3, k_row = 3,
+#             margins = c(40, 50)) 
+# 
+
+
+## ------------------------------------------------------------------------
+# divergent_viridis_magma <- c(rev(viridis(100, begin = 0.3)), magma(100, begin = 0.3))
+# rwb <- colorRampPalette(colors = c("darkred", "white", "darkgreen"))
+# library(RColorBrewer)
+# # display.brewer.pal(11, "BrBG")
+# BrBG <- colorRampPalette(brewer.pal(11, "BrBG"))
+# Spectral <- colorRampPalette(brewer.pal(11, "Spectral"))
+
+heatmaply(cor(mtcars), margins = c(40, 40),
+          k_col = 2, k_row = 2,
+          colors = BrBG,
+          limits = c(-1,1))
+# Better to use:
+# heatmaply_cor(cor(mtcars), margins = c(40, 40),
+#           k_col = 2, k_row = 2)
+
+
+## ------------------------------------------------------------------------
+heatmaply(percentize(mtcars), margins = c(40, 130),
+          colors = heat.colors(100))
+
+## ------------------------------------------------------------------------
+heatmaply(percentize(mtcars), margins = c(40, 130), 
+          scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "blue", high = "red", midpoint = 200, limits = c(0, 500)))
+
 
 ## ------------------------------------------------------------------------
 # The default of heatmaply:
-heatmaply(mtcars[1:10,], margins = c(40, 130),
+heatmaply(percentize(mtcars)[1:10,], margins = c(40, 130),
           seriate = "OLO")
 
 ## ------------------------------------------------------------------------
 # Similar to OLO but less optimal (since it is a heuristic)
-heatmaply(mtcars[1:10,], margin = c(40, 130),
+heatmaply(percentize(mtcars)[1:10,], margin = c(40, 130),
           seriate = "GW")
 
 ## ------------------------------------------------------------------------
 # the default by gplots::heatmaply.2
-heatmaply(mtcars[1:10,], margins = c(40, 130),
+heatmaply(percentize(mtcars)[1:10,], margins = c(40, 130),
           seriate = "mean")
 
 ## ------------------------------------------------------------------------
 # the default output from hclust
-heatmaply(mtcars[1:10,],  margins = c(40, 130),
+heatmaply(percentize(mtcars)[1:10,],  margins = c(40, 130),
           seriate = "none")
 
 ## ------------------------------------------------------------------------
@@ -79,48 +149,8 @@ col_dend  <- x %>% t %>% dist %>% hclust %>% as.dendrogram %>%
    ladderize
 #    rotate_DendSer(ser_weight = dist(t(x)))
 
-heatmaply(x, Rowv = row_dend, Colv = col_dend)
+heatmaply(percentize(x), Rowv = row_dend, Colv = col_dend)
 
-
-
-## ------------------------------------------------------------------------
-# divergent_viridis_magma <- c(rev(viridis(100, begin = 0.3)), magma(100, begin = 0.3))
-# rwb <- colorRampPalette(colors = c("darkred", "white", "darkgreen"))
-# library(RColorBrewer)
-# # display.brewer.pal(11, "BrBG")
-# BrBG <- colorRampPalette(brewer.pal(11, "BrBG"))
-# Spectral <- colorRampPalette(brewer.pal(11, "Spectral"))
-
-heatmaply(cor(mtcars), margins = c(40, 40),
-          k_col = 2, k_row = 2,
-          colors = BrBG,
-          limits = c(-1,1))
-
-
-## ------------------------------------------------------------------------
-heatmaply(mtcars, margins = c(40, 130),
-          colors = heat.colors(100))
-
-## ------------------------------------------------------------------------
-heatmaply(mtcars, margins = c(40, 130),
-          scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "blue", high = "red", midpoint = 200, limits = c(0, 500)))
-
-
-## ------------------------------------------------------------------------
-
-library(heatmaply)
-
-# warning - using grid_color cannot handle a large matrix!
-airquality[1:10,] %>% is.na10 %>% 
-  heatmaply(color = c("white","black"), grid_color = "grey",
-            k_col =3, k_row = 3,
-            margins = c(40, 50)) 
-
-# airquality %>% is.na10 %>% 
-#   heatmaply(color = c("grey80", "grey20"), # grid_color = "grey",
-#             k_col =3, k_row = 3,
-#             margins = c(40, 50)) 
-# 
 
 
 ## ------------------------------------------------------------------------

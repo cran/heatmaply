@@ -12,19 +12,19 @@ heatmaply(x, ...)
 
 heatmaply_na(x, grid_gap = 1, colors = c("grey80", "grey20"), ...)
 
-heatmaply_cor(x, limits = c(-1, 1), colors = RdBu, ...)
+heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
 
 \method{heatmaply}{default}(x, colors = viridis(n = 256, alpha = 1, begin = 0,
   end = 1, option = "viridis"), limits = NULL, na.value = "grey50",
   row_text_angle = 0, column_text_angle = 45, subplot_margin = 0,
   cellnote = NULL, draw_cellnote = !is.null(cellnote),
-  cellnote_color = "white", Rowv, Colv, distfun = dist,
-  hclustfun = hclust, dist_method = NULL, hclust_method = NULL,
-  distfun_row, hclustfun_row, distfun_col, hclustfun_col,
-  dendrogram = c("both", "row", "column", "none"), reorderfun = function(d,
-  w) reorder(d, w), k_row = 1, k_col = 1, symm = FALSE, revC,
-  scale = c("none", "row", "column"), na.rm = TRUE, row_dend_left = FALSE,
-  margins = c(NA, NA, NA, NA), ...,
+  cellnote_color = "auto", cellnote_textposition = "middle right", Rowv,
+  Colv, distfun = dist, hclustfun = hclust, dist_method = NULL,
+  hclust_method = NULL, distfun_row, hclustfun_row, distfun_col,
+  hclustfun_col, dendrogram = c("both", "row", "column", "none"),
+  reorderfun = function(d, w) reorder(d, w), k_row = 1, k_col = 1,
+  symm = FALSE, revC, scale = c("none", "row", "column"), na.rm = TRUE,
+  row_dend_left = FALSE, margins = c(NA, NA, NA, NA), ...,
   scale_fill_gradient_fun = scale_fill_gradientn(colors = if
   (is.function(colors)) colors(256) else colors, na.value = na.value, limits =
   limits), grid_color = NA, grid_gap = 0, srtRow, srtCol, xlab = "",
@@ -38,7 +38,7 @@ heatmaply_cor(x, limits = c(-1, 1), colors = RdBu, ...)
   subplot_widths = NULL, subplot_heights = NULL, colorbar_len = 0.3,
   colorbar_xanchor = if (row_dend_left) "right" else "left",
   colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left) -0.1 else
-  1.1, colorbar_ypos = 0, col)
+  1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE), col)
 
 \method{heatmaply}{heatmapr}(x, colors = viridis(n = 256, alpha = 1, begin =
   0, end = 1, option = "viridis"), limits = NULL, na.value = "grey50",
@@ -49,14 +49,15 @@ heatmaply_cor(x, limits = c(-1, 1), colors = RdBu, ...)
   limits), grid_color = NA, grid_gap = 0, srtRow, srtCol, xlab = "",
   ylab = "", main = "", titleX = TRUE, titleY = TRUE,
   hide_colorbar = FALSE, key.title = NULL, return_ppxpy = FALSE,
-  draw_cellnote = FALSE, cellnote_color = "white", row_side_colors,
-  row_side_palette, col_side_colors, col_side_palette,
-  plot_method = c("ggplot", "plotly"), ColSideColors, RowSideColors,
-  heatmap_layers = NULL, branches_lwd = 0.6, label_names,
-  fontsize_row = 10, fontsize_col = 10, subplot_widths = NULL,
-  subplot_heights = NULL, colorbar_xanchor = if (row_dend_left) "right" else
-  "left", colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left)
-  -0.1 else 1.1, colorbar_ypos = 0, colorbar_len = 0.3)
+  draw_cellnote = FALSE, cellnote_color = "auto",
+  cellnote_textposition = "middle right", row_side_colors, row_side_palette,
+  col_side_colors, col_side_palette, plot_method = c("ggplot", "plotly"),
+  ColSideColors, RowSideColors, heatmap_layers = NULL, branches_lwd = 0.6,
+  label_names, fontsize_row = 10, fontsize_col = 10,
+  subplot_widths = NULL, subplot_heights = NULL, colorbar_xanchor = if
+  (row_dend_left) "right" else "left", colorbar_yanchor = "bottom",
+  colorbar_xpos = if (row_dend_left) -0.1 else 1.1, colorbar_ypos = 0,
+  colorbar_len = 0.3, showticklabels = c(TRUE, TRUE))
 }
 \arguments{
 \item{x}{can either be a heatmapr object, or a numeric matrix
@@ -102,6 +103,11 @@ cellnote is not supplied, x will be used for cellnote.}
 
 \item{cellnote_color}{The color of the cellnote text to be used.}
 
+\item{cellnote_textposition}{The text positioning/centering of the cellnote.
+Default is "middle right". Options are
+"top left", "top center", "top right", "middle left", "middle center",
+"middle right", "bottom left", "bottom center", "bottom right"}
+
 \item{Rowv}{determines if and how the row dendrogram should be reordered.
 By default, it is TRUE, which implies dendrogram is computed and reordered
 based on row means. If NULL or FALSE, then no dendrogram is computed and
@@ -142,7 +148,8 @@ this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA
 \item{dendrogram}{character string indicating whether to draw 'none', 'row',
 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv)
 is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv
-(or Colv) arguments are honoured.}
+(or Colv) arguments are honoured.
+It also accepts TRUE/FALSE as synonyms for "both"/"none".}
 
 \item{reorderfun}{function(d, w) of dendrogram and weights for reordering the
 row and column dendrograms. The default uses stats{reorder.dendrogram}}
@@ -206,7 +213,7 @@ In the meantime it is MUCH better to use the grid_gap argument.}
 
 \item{titleY}{logical (TRUE). should y-axis titles be retained? (passed to \link[plotly]{subplot}).}
 
-\item{hide_colorbar}{logical (FALSE). If TRUE, then the color bar is hidden.}
+\item{hide_colorbar}{logical (FALSE). If TRUE, then the color bar (i.e.: the legend) is hidden.}
 
 \item{key.title}{(character) main title of the color key. If set to NULL (default) no title will be plotted.}
 
@@ -275,6 +282,14 @@ See \code{\link[plotly]{colorbar}} for more details.}
 
 \item{colorbar_xpos, colorbar_ypos}{The x and y co-ordinates (in proportion of the plot window)
 of the colorbar/color legend. See \code{\link[plotly]{colorbar}} for more details.}
+
+\item{showticklabels}{A logical vector of length two (defalt is TRUE).
+If FALSE, then the ticks are removed from the sides of the plot. The first location refers to
+the x axis and the second to the y axis. If only one value is supplied (TRUE/FALSE) then it is
+replicated to get to length 2. When using this parameter, it might be worth also adjusting
+margins.
+This option should be used when working with medium to large matrix size as it
+makes the heatmap much faster (and the hover still works).}
 }
 \description{
 An object of class heatmapr includes all the needed information
@@ -284,7 +299,7 @@ heatmap elements from the graphical rendaring of the object, which could be done
 (Please submit an issue on github if you have a feature that you wish to have added)
 
 heatmaply_na is a wrapper for `heatmaply` which comes with defaults that are better
-for exploring missing value (NA) patters. Specifically, the grid_gap is set to 1, and the
+for exploring missing value (NA) patterns. Specifically, the grid_gap is set to 1, and the
 colors include two shades of grey. It also calculates the \link{is.na10} autmoatically.
 
 heatmaply_cor is a wrapper for `heatmaply` which comes with defaults that are better
@@ -396,6 +411,25 @@ heatmaply(matrix(1:10000,100,100), k_row = 3, k_col = 3, grid_gap = 1)
 
 # Examples of playing with font size:
 heatmaply(mtcars, fontsize_col = 20, fontsize_row = 5, margin = c(100,90))
+
+
+
+# Example for using subplot_width/subplot_height
+
+heatmaply(percentize(mtcars),
+     subplot_widths=c(0.6, 0.4),
+     subplot_heights=c(0.05, 0.95))
+
+
+
+# Example of removing labels and thus making the plot faster
+heatmaply(iris, showticklabels = c(T,F), margins = c(80,10))
+
+# this is what allows for a much larger matrix to be printed:
+set.seed(2017-05-18)
+large_x <- matrix(rnorm(19), 1000,100)
+heatmaply(large_x, dendrogram = F, showticklabels = F, margins = c(1,1))
+
 
 }
 \dontrun{

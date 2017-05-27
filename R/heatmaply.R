@@ -65,6 +65,10 @@ is.plotly <- function(x) {
 #' if cellnote is not supplied, TRUE if cellnote is supplied. If TRUE and
 #' cellnote is not supplied, x will be used for cellnote.
 #' @param cellnote_color The color of the cellnote text to be used.
+#' @param cellnote_textposition The text positioning/centering of the cellnote.
+#' Default is "middle right". Options are
+#' "top left", "top center", "top right", "middle left", "middle center",
+#' "middle right", "bottom left", "bottom center", "bottom right"
 #'
 #' @param Rowv determines if and how the row dendrogram should be reordered.
 #' By default, it is TRUE, which implies dendrogram is computed and reordered
@@ -100,6 +104,7 @@ is.plotly <- function(x) {
 #' 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv)
 #' is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv
 #' (or Colv) arguments are honoured.
+#' It also accepts TRUE/FALSE as synonyms for "both"/"none".
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the
 #' row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
@@ -164,7 +169,7 @@ is.plotly <- function(x) {
 #' @param titleY logical (TRUE). should y-axis titles be retained? (passed to \link[plotly]{subplot}).
 #'
 #'
-#' @param hide_colorbar logical (FALSE). If TRUE, then the color bar is hidden.
+#' @param hide_colorbar logical (FALSE). If TRUE, then the color bar (i.e.: the legend) is hidden.
 #'
 #' @param key.title (character) main title of the color key. If set to NULL (default) no title will be plotted.
 #'
@@ -230,6 +235,14 @@ is.plotly <- function(x) {
 #' See \code{\link[plotly]{colorbar}} for more details.
 #' @param colorbar_xpos,colorbar_ypos The x and y co-ordinates (in proportion of the plot window)
 #' of the colorbar/color legend. See \code{\link[plotly]{colorbar}} for more details.
+#'
+#' @param showticklabels A logical vector of length two (defalt is TRUE).
+#' If FALSE, then the ticks are removed from the sides of the plot. The first location refers to
+#' the x axis and the second to the y axis. If only one value is supplied (TRUE/FALSE) then it is
+#' replicated to get to length 2. When using this parameter, it might be worth also adjusting
+#' margins.
+#' This option should be used when working with medium to large matrix size as it
+#' makes the heatmap much faster (and the hover still works).
 #'
 #' @export
 #' @examples
@@ -339,6 +352,25 @@ is.plotly <- function(x) {
 #' # Examples of playing with font size:
 #' heatmaply(mtcars, fontsize_col = 20, fontsize_row = 5, margin = c(100,90))
 #'
+#'
+#'
+#' # Example for using subplot_width/subplot_height
+#'
+#' heatmaply(percentize(mtcars),
+#'      subplot_widths=c(0.6, 0.4),
+#'      subplot_heights=c(0.05, 0.95))
+#'
+#'
+#'
+#' # Example of removing labels and thus making the plot faster
+#' heatmaply(iris, showticklabels = c(T,F), margins = c(80,10))
+#'
+#' # this is what allows for a much larger matrix to be printed:
+#' set.seed(2017-05-18)
+#' large_x <- matrix(rnorm(19), 1000,100)
+#' heatmaply(large_x, dendrogram = F, showticklabels = F, margins = c(1,1))
+#'
+#'
 #' }
 heatmaply <- function(x, ...) {
   UseMethod("heatmaply")
@@ -348,7 +380,7 @@ heatmaply <- function(x, ...) {
 #' @export
 #' @description
 #' heatmaply_na is a wrapper for `heatmaply` which comes with defaults that are better
-#' for exploring missing value (NA) patters. Specifically, the grid_gap is set to 1, and the
+#' for exploring missing value (NA) patterns. Specifically, the grid_gap is set to 1, and the
 #' colors include two shades of grey. It also calculates the \link{is.na10} autmoatically.
 #' @rdname heatmaply
 #' @examples
@@ -374,10 +406,10 @@ heatmaply_na <- function(x,
 #' }
 heatmaply_cor <- function(x,
                          limits = c(-1,1),
-                         colors = RdBu,
+                         colors = cool_warm,
                          ...) {
   heatmaply(x, limits = limits, # symm = TRUE,
-            colors = colors,...)
+            colors = colors, ...)
 }
 
 
@@ -399,7 +431,8 @@ heatmaply.default <- function(x,
                               subplot_margin = 0,
                               cellnote = NULL,
                               draw_cellnote = !is.null(cellnote),
-                              cellnote_color = "white",
+                              cellnote_color = "auto",
+                              cellnote_textposition = "middle right",
 
                               ## dendrogram control
                               Rowv,
@@ -465,6 +498,7 @@ heatmaply.default <- function(x,
                               colorbar_yanchor = "bottom",
                               colorbar_xpos = if(row_dend_left) -0.1 else 1.1,
                               colorbar_ypos = 0,
+                              showticklabels = c(TRUE, TRUE),
                               col) {
 
   if (!missing(long_data)) {
@@ -479,11 +513,12 @@ heatmaply.default <- function(x,
   }
 
   # this is to fix the error: "argument * matches multiple formal arguments"
-  if(!missing(col)) colors <- col
+  if (!missing(col)) colors <- col
 
   plot_method <- match.arg(plot_method)
 
   if (plot_method == "ggplot") {
+
     ## Suppress creation of new graphcis device, but on exit replace it.
     ## TODO: Avoid this or find better method
     old_dev <- options()[["device"]]
@@ -491,12 +526,23 @@ heatmaply.default <- function(x,
     options(device = names(capabilities()[which(capabilities())])[1])
   }
 
+
+  if(is.logical(dendrogram)) {
+    # Using if and not ifelse to make sure the output is a "scalar".
+    dendrogram <- if(dendrogram) "both" else "none"
+    # if(T) "both" else "none"
+    # if(F) "both" else "none"
+  }
   dendrogram <- match.arg(dendrogram)
 
-  if(!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
 
-  if(!missing(srtRow)) row_text_angle <- srtRow
-  if(!missing(srtCol)) column_text_angle <- srtCol
+
+
+
+  if (!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
+
+  if (!missing(srtRow)) row_text_angle <- srtRow
+  if (!missing(srtCol)) column_text_angle <- srtCol
 
   if (!is.null(ColSideColors)) {
     col_side_colors <- ColSideColors
@@ -510,19 +556,19 @@ heatmaply.default <- function(x,
 
   # TODO: maybe create heatmaply.data.frame heatmaply.matrix instead.
   #       But right now I am not sure this would be needed.
-  if(is.data.frame(x)) {
+  if (is.data.frame(x)) {
     ss_c_numeric <- sapply(x, is.numeric)
   }
-  if(is.matrix(x)) {
+  if (is.matrix(x)) {
     ss_c_numeric <- apply(x, 2, is.numeric)
   }
 
   # We must have some numeric values to be able to make a heatmap
-  if(!any(ss_c_numeric)) stop("heatmaply only works for data.frame/matrix which includes some numeric columns.")
+  if (!any(ss_c_numeric)) stop("heatmaply only works for data.frame/matrix which includes some numeric columns.")
 
   # If we have non-numeric columns, we should move them to row_side_colors
   # TODO: add a parameter to control removing of non-numeric columns without moving them to row_side_colors
-  if(!all(ss_c_numeric)) {
+  if (!all(ss_c_numeric)) {
     row_side_colors <- if (missing(row_side_colors)) {
       data.frame(x[, !ss_c_numeric, drop= FALSE])
     } else {
@@ -532,12 +578,13 @@ heatmaply.default <- function(x,
   }
 
   # help dendrogram work again:
-  if(dendrogram == "row") Colv <- FALSE
-  if(dendrogram == "column") Rowv <- FALSE
-  if(dendrogram == "none") Rowv <- Colv <- FALSE
+  if (dendrogram == "row") Colv <- FALSE
+  if (dendrogram == "column") Rowv <- FALSE
+  if (dendrogram == "none") Rowv <- Colv <- FALSE
 
   # this also occurs in heatmapr, so it may be o.k. to remove the following line.
   seriate <- match.arg(seriate)
+
   if (is.numeric(cellnote_color)) cellnote_color <- grDevices::palette()[cellnote_color]
 
   hm <- heatmapr(x,
@@ -599,6 +646,7 @@ heatmaply.default <- function(x,
                      label_names = label_names,
                      plot_method = plot_method,
                      draw_cellnote = draw_cellnote,
+                     cellnote_textposition = cellnote_textposition,
                      cellnote_color = cellnote_color,
                      fontsize_row = fontsize_row,
                      fontsize_col = fontsize_col,
@@ -608,11 +656,13 @@ heatmaply.default <- function(x,
                      colorbar_xanchor = colorbar_xanchor,
                      colorbar_yanchor = colorbar_yanchor,
                      colorbar_xpos = colorbar_xpos,
-                     colorbar_ypos = colorbar_ypos)
+                     colorbar_ypos = colorbar_ypos,
+                     showticklabels = showticklabels
+                     )
 
                      # TODO: think more on what should be passed in "..."
 
-  if(!missing(file)) hmly %>% saveWidget(file = file, selfcontained = TRUE)
+  if (!missing(file)) hmly %>% saveWidget(file = file, selfcontained = TRUE)
 
   hmly
 }
@@ -630,7 +680,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
                                           row_dend_left = FALSE, subplot_margin = 0,
                                           titleX = TRUE, titleY = TRUE,
                                           widths=NULL, heights=NULL,
-                                          plot_method, ...) {
+                                          plot_method) {
 
   if (is.null(widths)) {
     if (!is.null(px)) {
@@ -646,6 +696,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
         widths <- c(0.9, 0.1)
       }
     }
+    if(row_dend_left) widths <- rev(widths)
   }
 
   if (is.null(heights)) {
@@ -687,7 +738,6 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
   ind_null_row <- sapply(row3_list, is.null)
   ind_remove_row <- rep(ind_null_row, length.out = length(plots))
 
-
   if (sum(!ind_null_col) != length(heights)) {
     stop(paste("Number of subplot_heights supplied is not correct; should be",
       sum(!ind_null_col), "but is", length(heights)))
@@ -700,13 +750,12 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
   ## Remove all null plots
   plots <- plots[!(ind_remove_row | ind_remove_col)]
 
-
   ## Interim solution before removing warnings in documented way
   suppressMessages(
     suppressWarnings(
       s <- subplot(plots,
         nrows = nrows,
-        widths = if(row_dend_left) rev(widths) else widths,
+        widths = widths,
         shareX = TRUE, shareY = TRUE,
         titleX = titleX, titleY = titleY,
         margin = subplot_margin,
@@ -776,7 +825,8 @@ heatmaply.heatmapr <- function(x,
                                key.title = NULL,
                                return_ppxpy = FALSE,
                                draw_cellnote = FALSE,
-                               cellnote_color = "white",
+                               cellnote_color = "auto",
+                               cellnote_textposition = "middle right",
                                row_side_colors,
                                row_side_palette,
                                col_side_colors,
@@ -795,14 +845,20 @@ heatmaply.heatmapr <- function(x,
                                colorbar_yanchor = "bottom",
                                colorbar_xpos = if(row_dend_left) -0.1 else 1.1,
                                colorbar_ypos = 0,
-                               colorbar_len = 0.3) {
+                               colorbar_len = 0.3,
+                               showticklabels = c(TRUE, TRUE)
+                               ) {
 
   plot_method <- match.arg(plot_method)
+  cellnote_textposition <- match.arg(cellnote_textposition,
+    choices = c("top left", "top center" , "top right", "middle left",
+      "middle center", "middle right", "bottom left", "bottom center",
+      "bottom right"))
 
   # informative errors for mis-specified limits
-  if(!is.null(limits)) {
-    if(!is.numeric(limits)) stop("limits must be numeric")
-    if(length(limits) != 2L) stop("limits must be of length 2 (i.e.: two dimensional)")
+  if (!is.null(limits)) {
+    if (!is.numeric(limits)) stop("limits must be numeric")
+    if (length(limits) != 2L) stop("limits must be of length 2 (i.e.: two dimensional)")
 
     r <- range(as.matrix(x$matrix$data), na.rm = TRUE)
     limits <- sort(limits)
@@ -817,8 +873,8 @@ heatmaply.heatmapr <- function(x,
       warning("Upper limit is not >= highest value in x, max of limits is set to the max of the range (otherwise, colors will be broken!)")
     }
   }
-  if(!missing(srtRow)) row_text_angle <- srtRow
-  if(!missing(srtCol)) column_text_angle <- srtCol
+  if (!missing(srtRow)) row_text_angle <- srtRow
+  if (!missing(srtCol)) column_text_angle <- srtCol
 
   # x is a heatmapr object.
   # heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx, image = imgUri,
@@ -835,7 +891,7 @@ heatmaply.heatmapr <- function(x,
   rows <- x$rows
   cols <- x$cols
 
-  if(!is.null(branches_lwd) && branches_lwd != 1) {
+  if (!is.null(branches_lwd) && branches_lwd != 1) {
     if(is.dendrogram(rows) && !has_edgePar(rows, "lwd")) rows <- set(rows, "branches_lwd", branches_lwd)
     if(is.dendrogram(cols) && !has_edgePar(cols, "lwd")) cols <- set(cols, "branches_lwd", branches_lwd)
   }
@@ -843,7 +899,7 @@ heatmaply.heatmapr <- function(x,
 
 
   # this is using dendextend
-  if(is.null(cols)) {
+  if (is.null(cols)) {
     py <- NULL
   } else {
     if (plot_method == "ggplot") {
@@ -856,7 +912,7 @@ heatmaply.heatmapr <- function(x,
       suppressWarnings(      py <- plotly_dend(cols, side = "col"))
     }
   }
-  if(is.null(rows)) {
+  if (is.null(rows)) {
     px <- NULL
   } else {
     if (plot_method == "ggplot") {
@@ -868,7 +924,7 @@ heatmaply.heatmapr <- function(x,
         coord_flip(expand = FALSE, xlim = ylims) +
         theme_bw() +
         theme_clear_grid_dends
-      if(row_dend_left) px <- px + scale_y_reverse()
+      if (row_dend_left) px <- px + scale_y_reverse()
     } else {
       px <- plotly_dend(rows, flip = row_dend_left, side = "row")
     }
@@ -897,6 +953,10 @@ heatmaply.heatmapr <- function(x,
       colorbar_xpos = colorbar_xpos, colorbar_ypos = colorbar_ypos,
       colorbar_len = colorbar_len)
   }
+
+
+
+
 
 
   # TODO: Add native plotly sidecolor function.
@@ -937,31 +997,33 @@ heatmaply.heatmapr <- function(x,
     )
   }
 
-  if(return_ppxpy) {
+  if (return_ppxpy) {
     return(list(p=p, px=px, py=py, pr=pr, pc=pc))
   }
 
   ## plotly:
   # turn p, px, and py to plotly objects if necessary
   if (!is.plotly(p)) p <- ggplotly(p) %>% layout(showlegend=FALSE)
-  if (draw_cellnote) {
-    df <- as.data.frame(x[["cellnote"]])
 
+  if (draw_cellnote) {
+    ## Predict cell color luminosity based on colorscale
+    if (cellnote_color == "auto") {
+      cellnote_color <- predict_colors(p, plot_method)
+    }
+
+    df <- as.data.frame(x[["cellnote"]])
     df$row <- 1:nrow(df)
     mdf <- reshape2::melt(df, id.vars="row")
-    mdf$variable <- factor(mdf$variable, levels = p$x$layout$xaxis$ticktext)
-    mdf$variable <- as.numeric(mdf$variable)
+    ## TODO: Enforce same dimnames to ensure it's not scrambled?
+    # mdf$variable <- factor(mdf$variable, levels = p$x$layout$xaxis$ticktext)
+    mdf$variable <- as.numeric(as.factor(mdf$variable))
     mdf$value <- factor(mdf$value)
 
     p <- p %>% add_trace(y = mdf$row, x = mdf$variable, text = mdf$value,
-        type = "scatter", mode = "text", textposition = "middle right",
+        type = "scatter", mode = "text", textposition = cellnote_textposition,
         hoverinfo = "none",
-        textfont = list(color = plotly::toRGB(cellnote_color), size = 16))
-    # p <- p %>% add_trace(data = mdf, type = "scatter", mode = "text",
-    #     textfont = list(color = '#000000', size = 16),
-    #     textposition = "middle left",
-    #     y = ~row, x = ~variable, text = ~value)
-
+        textfont = list(color = plotly::toRGB(cellnote_color), size = 12)
+      )
   }
   if (!is.null(px) && !is.plotly(px)) {
     px <- ggplotly(px, tooltip = "y") %>%
@@ -1012,8 +1074,24 @@ heatmaply.heatmapr <- function(x,
     # if(!is.null(pc)) pc <- style(pc, ygap = grid_gap)
   }
 
+
+  if(!all(showticklabels)) {
+    if(!is.logical(showticklabels)) stop("showticklabels must be a logical vector of length 2 or 1")
+    if(length(showticklabels) == 1) showticklabels <- rep(showticklabels, 2)
+    p <- p %>%
+      layout(xaxis = list(showticklabels = showticklabels[1]),
+             yaxis = list(showticklabels = showticklabels[2]))
+
+      # ggplotly() %>%
+      # layout(yaxis = list(tickmode='auto'),
+      #        xaxis = list(tickmode='auto'))
+  }
+
+
+
   heatmap_subplot <- heatmap_subplot_from_ggplotly(p = p, px = px, py = py,
     row_dend_left = row_dend_left, subplot_margin = subplot_margin,
+    widths = subplot_widths, heights = subplot_heights,
     titleX = titleX, titleY = titleY, pr = pr, pc = pc, plot_method = plot_method)
   l <- layout(heatmap_subplot,
       margin = list(l = margins[2], b = margins[1], t = margins[3], r = margins[4]),
@@ -1033,4 +1111,67 @@ calc_margin <- function(labels, fontsize) {
     max(nchar(labels) * fontsize, na.rm = TRUE) * 0.6
   # http://stackoverflow.com/questions/19113725/what-dependency-between-font-size-and-width-of-char-in-monospace-font
 
+}
+
+
+
+
+## Predict luminosity of cells and change text based on that
+predict_colors <- function(p, plot_method) {
+
+  ## http://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+  colorscale_df <- p$x$data[[1]]$colorscale
+  cell_values <- as.data.frame(p$x$data[[1]]$z)
+  cell_values$row <- 1:nrow(cell_values)
+  cell_values_m <- reshape2::melt(cell_values, id.vars = "row")
+  cell_values_vector <- cell_values_m$value
+  ## Need to normalise to (0, 1) scale as this is what plotly
+  ## uses internally
+  if (plot_method == "plotly") {
+    ## Need to convert plotly colors to hex colors
+    colorscale_df[, 2] <- parse_plotly_color(colorscale_df[, 2])
+
+    cell_values_vector <- normalize(as.numeric(cell_values_vector))
+    ## interpolate to 256 colors because that's probably enough
+    colorscale_df <- data.frame(
+      stats::approx(as.numeric(colorscale_df[, 1]), n = 256)$y,
+      grDevices::colorRampPalette(colorscale_df[, 2])(256)
+    )
+
+    ## Then need to sort, find nearest neighbour, and map across
+    cell_values_vector_sort <- sort(cell_values_vector)
+    nearest_neighbours <- sapply(cell_values_vector_sort,
+      function(val) {
+        max(colorscale_df[as.numeric(colorscale_df[, 1]) <= val, 1])
+      }
+    )
+    names(nearest_neighbours) <- cell_values_vector_sort
+    cell_values_vector <- nearest_neighbours[as.character(cell_values_vector)]
+  }
+
+  cell_values_vector <- as.character(cell_values_vector)
+  ind <- match(cell_values_vector, colorscale_df[, 1])
+  cell_colors <- unlist(colorscale_df[ind, 2])
+  cell_colors_rgb <- colorspace::hex2RGB(cell_colors)
+  cell_font_colors <- sapply(seq_len(nrow(cell_colors_rgb@coords)),
+    function(i) {
+      col <- cell_colors_rgb@coords[i, ]
+      luma <- (0.2126 * col[1]) +
+        (0.7152 * col[2]) +
+        (0.0722 * col[3])
+      ifelse (luma < 0.4, "white", "black")
+    }
+  )
+  cell_font_colors
+}
+
+
+parse_plotly_color <- function(color) {
+  r <- gsub("rgb[a]?\\((\\d+),(\\d+),(\\d+),\\d+)",
+    "\\1", color)
+  g <- gsub("rgb[a]?\\((\\d+),(\\d+),(\\d+),\\d+)",
+    "\\2", color)
+  b <- gsub("rgb[a]?\\((\\d+),(\\d+),(\\d+),\\d+)",
+    "\\3", color)
+  rgb(r, g, b, maxColorValue = 255)
 }

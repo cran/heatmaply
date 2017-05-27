@@ -18,6 +18,18 @@
 
 
 
+
+
+# ### add new branches:
+# ### http://r-pkgs.had.co.nz/git.html#git-branch
+# git checkout -b faster_01
+# git push --set-upstream origin faster_01
+
+
+
+
+
+
 #' @import dendextend
 #' @import ggplot2
 #' @import magrittr
@@ -251,6 +263,10 @@ heatmaplyWelcomeMessage <- function(){
 
 
 
+
+# Search [^\x00-\x7F]+
+# with notepad++ with regex, in order to find non-ascii values.
+# Source: http://stackoverflow.com/questions/20889996/notepad-how-to-remove-all-non-ascii-characters-with-regex
 
 
 

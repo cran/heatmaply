@@ -54,12 +54,12 @@ heatmaply(mtcars, xlab = "Features", ylab = "Cars",
 
 ## ------------------------------------------------------------------------
 heatmaply(normalize(mtcars), xlab = "Features", ylab = "Cars", 
-		main = "Data transformation using 'scale'",
+		main = "Data transformation using 'normalize'",
 		margins = c(60,100,40,20))
 
 ## ------------------------------------------------------------------------
 heatmaply(percentize(mtcars), xlab = "Features", ylab = "Cars", 
-		main = "Data transformation using 'scale'",
+		main = "Data transformation using 'percentize'",
 		margins = c(60,100,40,20))
 
 ## ------------------------------------------------------------------------
@@ -109,7 +109,7 @@ heatmaply(percentize(mtcars), margins = c(40, 130),
           colors = heat.colors(100))
 
 ## ------------------------------------------------------------------------
-heatmaply(percentize(mtcars), margins = c(40, 130), 
+heatmaply(mtcars, margins = c(40, 130), 
           scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "blue", high = "red", midpoint = 200, limits = c(0, 500)))
 
 
@@ -158,7 +158,14 @@ x  <- as.matrix(datasets::mtcars)
 gplots::heatmap.2(x, trace = "none", col = viridis(100), key = FALSE)
 
 ## ------------------------------------------------------------------------
-heatmaply::heatmaply(x, seriate = "mean")
+library(heatmaply)
+heatmaply(x, seriate = "mean")
+
+## ------------------------------------------------------------------------
+library(heatmaply)
+heatmaply(x, seriate = "mean", 
+          row_dend_left = TRUE, plot_method = "plotly",
+          margins = c(40,NA,NA,NA))
 
 ## ------------------------------------------------------------------------
 # Example for using RowSideColors

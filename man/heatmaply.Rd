@@ -30,15 +30,17 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   limits), grid_color = NA, grid_gap = 0, srtRow, srtCol, xlab = "",
   ylab = "", main = "", titleX = TRUE, titleY = TRUE,
   hide_colorbar = FALSE, key.title = NULL, return_ppxpy = FALSE,
-  row_side_colors, row_side_palette, col_side_colors, col_side_palette,
-  ColSideColors = NULL, RowSideColors = NULL, seriate = c("OLO", "mean",
-  "none", "GW"), heatmap_layers = NULL, branches_lwd = 0.6, file, long_data,
-  plot_method = c("ggplot", "plotly"), label_names = c("row", "column",
-  "value"), fontsize_row = 10, fontsize_col = 10, cexRow, cexCol,
+  row_side_colors, row_side_palette = NULL, col_side_colors,
+  col_side_palette = NULL, ColSideColors = NULL, RowSideColors = NULL,
+  seriate = c("OLO", "mean", "none", "GW"), heatmap_layers = NULL,
+  side_color_layers = NULL, branches_lwd = 0.6, file, long_data,
+  plot_method = c("ggplot", "plotly"), label_names = NULL,
+  fontsize_row = 10, fontsize_col = 10, cexRow, cexCol,
   subplot_widths = NULL, subplot_heights = NULL, colorbar_len = 0.3,
   colorbar_xanchor = if (row_dend_left) "right" else "left",
   colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left) -0.1 else
-  1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE), col)
+  1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE),
+  dynamicTicks = FALSE, labRow, labCol, col)
 
 \method{heatmaply}{heatmapr}(x, colors = viridis(n = 256, alpha = 1, begin =
   0, end = 1, option = "viridis"), limits = NULL, na.value = "grey50",
@@ -50,14 +52,17 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   ylab = "", main = "", titleX = TRUE, titleY = TRUE,
   hide_colorbar = FALSE, key.title = NULL, return_ppxpy = FALSE,
   draw_cellnote = FALSE, cellnote_color = "auto",
-  cellnote_textposition = "middle right", row_side_colors, row_side_palette,
-  col_side_colors, col_side_palette, plot_method = c("ggplot", "plotly"),
-  ColSideColors, RowSideColors, heatmap_layers = NULL, branches_lwd = 0.6,
-  label_names, fontsize_row = 10, fontsize_col = 10,
-  subplot_widths = NULL, subplot_heights = NULL, colorbar_xanchor = if
-  (row_dend_left) "right" else "left", colorbar_yanchor = "bottom",
-  colorbar_xpos = if (row_dend_left) -0.1 else 1.1, colorbar_ypos = 0,
-  colorbar_len = 0.3, showticklabels = c(TRUE, TRUE))
+  cellnote_textposition = "middle right",
+  row_side_colors = x[["row_side_colors"]], row_side_palette = NULL,
+  col_side_colors = x[["col_side_colors"]], col_side_palette = NULL,
+  plot_method = c("ggplot", "plotly"), ColSideColors, RowSideColors,
+  heatmap_layers = NULL, side_color_layers = NULL, branches_lwd = 0.6,
+  label_names = c("row", "column", "value"), fontsize_row = 10,
+  fontsize_col = 10, subplot_widths = NULL, subplot_heights = NULL,
+  colorbar_xanchor = if (row_dend_left) "right" else "left",
+  colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left) -0.1 else
+  1.1, colorbar_ypos = 0, colorbar_len = 0.3, showticklabels = c(TRUE,
+  TRUE), dynamicTicks = FALSE, labRow, labCol)
 }
 \arguments{
 \item{x}{can either be a heatmapr object, or a numeric matrix
@@ -245,16 +250,24 @@ that is restricted by the dendrogram structure)}
 \item{heatmap_layers}{ggplot object (eg, theme_bw()) to be added to
 the heatmap before conversion to a plotly object.}
 
+\item{side_color_layers}{Layers to be added to side color plots, similar to
+heatmap_layers.}
+
 \item{branches_lwd}{numeric (default is 0.6). The width of the dendrograms' branches.
 If NULL then it is ignored. If the "lwd" is already defined in Rowv/Colv then this
 parameter is ignored (it is checked using \link[dendextend]{has_edgePar}("lwd")).}
 
-\item{file}{HTML file name to save the heatmaply into. Should be a character
-string ending with ".html".
-For example: heatmaply(x, file = "heatmaply_plot.html").
-This should not include a directory, only the name of the file.
-You can relocate the file once it is created, or use \link{setwd} first.
-This is based on \link[htmlwidgets]{saveWidget}.}
+\item{file}{name of the file(s) into which to save the heatmaply output.
+Should be a character vector of strings ending with ".html" for a dynamic output,
+or ".png", ".jpeg", ".pdf" for a static output.
+
+For example: heatmaply(x, file = "heatmaply_plot.html") or
+dir.create("folder")
+heatmaply(x, file = "folder/heatmaply_plot.html")
+This is based on \link[htmlwidgets]{saveWidget}, and \link[webshot]{webshot} for the static files.
+For more refined control over the static file output, you should save the heatmaply object using \link[webshot]{webshot}.
+
+Another example: heatmaply(x, file = c("heatmaply_plot.html", "heatmaply_plot.png"))}
 
 \item{long_data}{Data in long format. Replaces x, so both should not be used.
 Colnames must be c("name", "variable", "value"). If you do not have a names
@@ -264,7 +277,7 @@ inthe data.}
 \item{plot_method}{Use "ggplot" or "plotly" to choose which library produces heatmap
 and dendrogram plots}
 
-\item{label_names}{Names for labells of x, y and value/fill mouseover.}
+\item{label_names}{Names for labels of x, y and value/fill mouseover.}
 
 \item{fontsize_row, fontsize_col, cexRow, cexCol}{Font size for row and column labels.}
 
@@ -290,6 +303,15 @@ replicated to get to length 2. When using this parameter, it might be worth also
 margins.
 This option should be used when working with medium to large matrix size as it
 makes the heatmap much faster (and the hover still works).}
+
+\item{dynamicTicks}{(defalut: FALSE). passed to \link[plotly]{ggplotly}:
+should plotly.js dynamically generate axis tick labels?
+Dynamic ticks are useful for updating ticks in response to zoom/pan interactions; however,
+they can not always reproduce labels as they would appear in the static ggplot2 image.}
+
+\item{labRow, labCol}{character vectors with row and column labels to use; these default to rownames(x) or colnames(x), respectively.
+if set to NA, they change the value in showticklabels to be FALSE. This is mainly to keep
+backward compatibility with gplots::heatmap.2.}
 }
 \description{
 An object of class heatmapr includes all the needed information
@@ -353,6 +375,12 @@ subplot(hm1, hm2, margin = .02, shareY = TRUE)
 
 # We can save heatmaply as an HTML file by using:
 heatmaply(iris[,-5], file = "heatmaply_iris.html")
+# or a png/pdf/jpeg file using:
+heatmaply(iris[,-5], file = "heatmaply_iris.png")
+# or just doing it in one go:
+heatmaply(iris[,-5], file = c("heatmaply_iris.html", "heatmaply_iris.png") )
+
+
 
 # If we don't want the HTML to be selfcontained, we can use the following:
 library(heatmaply)

@@ -58,10 +58,12 @@ ggplot_heatmap <- function(xx,
                                     panel.background = element_blank())
   # heatmap
   # xx <- x$matrix$data
-  if(!is.data.frame(xx)) df <- as.data.frame(xx)
+
+  df <- xx
+  if(!is.data.frame(df)) df <- as.data.frame(df, check.rows = FALSE)
 
   if (is.null(label_names)) {
-    if (is.null(dim_names <- names(dimnames(xx)))) {
+    if (is.null(dim_names <- names(dimnames(df)))) {
       label_names <- c("row", "column", "value")
     } else {
       label_names <- dim_names
@@ -74,10 +76,10 @@ ggplot_heatmap <- function(xx,
   val <- label_names[[3]]
 
   # colnames(df) <- x$matrix$cols
-  if(!is.null(rownames(xx))) {
-    df[[row]] <- rownames(xx)
+  if(!is.null(rownames(df))) {
+    df[[row]] <- make.unique(rownames(df), "_")
   } else {
-    df[[row]] <- 1:nrow(xx)
+    df[[row]] <- 1:nrow(df)
   }
 
   df[[row]] <- factor(
@@ -85,6 +87,7 @@ ggplot_heatmap <- function(xx,
     levels = df[[row]],
     ordered = TRUE
   )
+
 
   mdf <- reshape2::melt(df, id.vars = row)
   colnames(mdf)[2:3] <- c(col, val) # rename "variable" and "value"
@@ -616,6 +619,9 @@ plotly_side_color_plot <- function(df, palette = NULL,
 
 
 
+#' @import webshot
+# just so to have an excuse for why webshot is in import (the real reason is that plotly has it as suggests while it is used there by plotly::export)
+# webshot <- webshot::webshot
 
 
 

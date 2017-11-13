@@ -82,6 +82,9 @@ is.plotly <- function(x) {
 #' identically to the rows.
 #' @param distfun function used to compute the distance (dissimilarity)
 #' between both rows and columns. Defaults to dist.
+#' The options "pearson", "spearman" and "kendall" can be used to
+#' use correlation-based clustering, which uses \code{as.dist(1 - cor(t(x)))}
+#' as the distance metric (using the specified correlation method).
 #' @param hclustfun function used to compute the hierarchical clustering
 #' when Rowv or Colv are not dendrograms. Defaults to hclust.
 #'
@@ -181,6 +184,8 @@ is.plotly <- function(x) {
 #'    row/column side colors in the style of heatmap.2/heatmap.3.
 #'    col_side_colors should be "wide", ie be the same dimensions
 #'    as the column side colors it will produce.
+#'    When a data.frame is provided, the column names are used as the label names for each of the newely added row_side_colors.
+#'    When a vector is provided it is coerced into a data.frame and the name of the side color will be just row_side_colors.
 #'
 #' @param row_side_palette,col_side_palette Color palette functions to be
 #'    used for row_side_colors and col_side_colors respectively.
@@ -221,6 +226,8 @@ is.plotly <- function(x) {
 #'
 #' Another example: heatmaply(x, file = c("heatmaply_plot.html", "heatmaply_plot.png"))
 #'
+#' @param width,height The width and height of the image saved. Default is
+#' which uses 800 x 500 pixels.
 #' @param long_data Data in long format. Replaces x, so both should not be used.
 #'  Colnames must be c("name", "variable", "value"). If you do not have a names
 #'  column you can simply use a sequence of numbers from 1 to the number of "rows"
@@ -509,6 +516,8 @@ heatmaply.default <- function(x,
                               side_color_layers = NULL,
                               branches_lwd = 0.6,
                               file,
+                              width = NULL,
+                              height = NULL,
                               long_data,
                               plot_method = c("ggplot", "plotly"),
                               label_names = NULL,
@@ -530,7 +539,9 @@ heatmaply.default <- function(x,
                               col) {
 
   if (!missing(long_data)) {
-    if (!missing(x)) warning("x and long_data should not be used together")
+    if (!missing(x)) {
+        warning("x and long_data should not be used together")
+    }
     assert_that(
       ncol(long_data) == 3,
       all(colnames(long_data) == c("name", "variable", "value"))
@@ -555,17 +566,13 @@ heatmaply.default <- function(x,
   }
 
 
-  if(is.logical(dendrogram)) {
+  if (is.logical(dendrogram)) {
     # Using if and not ifelse to make sure the output is a "scalar".
-    dendrogram <- if(dendrogram) "both" else "none"
+    dendrogram <- if (dendrogram) "both" else "none"
     # if(T) "both" else "none"
     # if(F) "both" else "none"
   }
   dendrogram <- match.arg(dendrogram)
-
-
-
-
 
   if (!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
 
@@ -696,7 +703,7 @@ heatmaply.default <- function(x,
 
 
   if (!missing(file)) {
-    hmly_to_file(hmly, file)
+    hmly_to_file(hmly = hmly, file = file, width = width, height = height)
   }
 
   hmly
@@ -765,6 +772,19 @@ heatmaply.heatmapr <- function(x,
     choices = c("top left", "top center" , "top right", "middle left",
       "middle center", "middle right", "bottom left", "bottom center",
       "bottom right"))
+
+
+  is.Rgui <- function(...) {
+    .Platform$GUI == "Rgui" #if running on MAC OS, this would likely be "AQUA"
+  }
+
+  if(is.Rgui()) {
+    # browser()
+    # print(p) # solves R crashes - not sure why...
+    dev.new() # it seems we need just some device to be open...
+  }
+
+
 
   # informative errors for mis-specified limits
   if (!is.null(limits)) {
@@ -976,7 +996,9 @@ heatmaply.heatmapr <- function(x,
 
   ## plotly:
   # turn p, px, and py to plotly objects if necessary
-  if (!is.plotly(p)) p <- ggplotly(p, dynamicTicks = dynamicTicks) %>% layout(showlegend=TRUE)
+  if (!is.plotly(p)) {
+    p <- ggplotly(p, dynamicTicks = dynamicTicks) %>% layout(showlegend=TRUE)
+  }
 
 
   if (draw_cellnote) {

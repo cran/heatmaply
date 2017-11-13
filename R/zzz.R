@@ -43,10 +43,14 @@
 #' @importFrom stats as.dendrogram dendrapply dist hclust is.leaf order.dendrogram reorder sd
 #' @importFrom seriation seriate get_order
 #' @importFrom dendextend set is.dendrogram is.hclust seriate_dendrogram rotate color_branches find_k as.ggdend
-#' @importFrom stats ecdf na.omit
+#' @importFrom stats ecdf na.omit as.dist cor
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom plotly plot_ly add_segments
 #' @importFrom assertthat assert_that
+#' @importFrom grDevices dev.new
+#' @importFrom assertthat assert_that
+
+#'
 NULL
 
 
@@ -99,17 +103,19 @@ heatmaplyWelcomeMessage <- function(){
    # library(utils)
 
    paste0("\n",
-         "---------------------\n",
+         "======================\n",
          "Welcome to heatmaply version ", utils::packageDescription("heatmaply")$Version, "\n",
          # "\n",
+         "\n",
+         "Type citation('heatmaply') for how to cite the package.\n",
          "Type ?heatmaply for the main documentation.\n",
+         "\n",
          "The github page is: https://github.com/talgalili/heatmaply/\n",
-         "\n",
-         "Suggestions and bug-reports can be submitted at: https://github.com/talgalili/heatmaply/issues\n",
+         "Please submit your suggestions and bug-reports at: https://github.com/talgalili/heatmaply/issues\n",
          "Or contact: <tal.galili@gmail.com>\n",
-         "\n",
-         "\tTo suppress this message use:  ", "suppressPackageStartupMessages(library(heatmaply))\n",
-         "---------------------\n"
+         # "\n",
+         # "\tTo suppress this message use:  ", "suppressPackageStartupMessages(library(heatmaply))\n",
+         "======================\n"
    )
 }
 

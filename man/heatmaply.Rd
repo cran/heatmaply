@@ -33,13 +33,13 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   row_side_colors, row_side_palette = NULL, col_side_colors,
   col_side_palette = NULL, ColSideColors = NULL, RowSideColors = NULL,
   seriate = c("OLO", "mean", "none", "GW"), heatmap_layers = NULL,
-  side_color_layers = NULL, branches_lwd = 0.6, file, long_data,
-  plot_method = c("ggplot", "plotly"), label_names = NULL,
-  fontsize_row = 10, fontsize_col = 10, cexRow, cexCol,
-  subplot_widths = NULL, subplot_heights = NULL, colorbar_len = 0.3,
-  colorbar_xanchor = if (row_dend_left) "right" else "left",
-  colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left) -0.1 else
-  1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE),
+  side_color_layers = NULL, branches_lwd = 0.6, file, width = NULL,
+  height = NULL, long_data, plot_method = c("ggplot", "plotly"),
+  label_names = NULL, fontsize_row = 10, fontsize_col = 10, cexRow,
+  cexCol, subplot_widths = NULL, subplot_heights = NULL,
+  colorbar_len = 0.3, colorbar_xanchor = if (row_dend_left) "right" else
+  "left", colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left)
+  -0.1 else 1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE),
   dynamicTicks = FALSE, labRow, labCol, col)
 
 \method{heatmaply}{heatmapr}(x, colors = viridis(n = 256, alpha = 1, begin =
@@ -128,7 +128,10 @@ square matrix, Colv = "Rowv" means that columns should be treated
 identically to the rows.}
 
 \item{distfun}{function used to compute the distance (dissimilarity)
-between both rows and columns. Defaults to dist.}
+between both rows and columns. Defaults to dist.
+The options "pearson", "spearman" and "kendall" can be used to
+use correlation-based clustering, which uses \code{as.dist(1 - cor(t(x)))}
+as the distance metric (using the specified correlation method).}
 
 \item{hclustfun}{function used to compute the hierarchical clustering
 when Rowv or Colv are not dendrograms. Defaults to hclust.}
@@ -231,7 +234,9 @@ future just to make it easy to create a ggplot heatmaps.}
 \item{row_side_colors, col_side_colors}{data.frame of factors to produce
 row/column side colors in the style of heatmap.2/heatmap.3.
 col_side_colors should be "wide", ie be the same dimensions
-as the column side colors it will produce.}
+as the column side colors it will produce.
+When a data.frame is provided, the column names are used as the label names for each of the newely added row_side_colors.
+When a vector is provided it is coerced into a data.frame and the name of the side color will be just row_side_colors.}
 
 \item{row_side_palette, col_side_palette}{Color palette functions to be
 used for row_side_colors and col_side_colors respectively.}
@@ -270,6 +275,9 @@ This is based on \link[htmlwidgets]{saveWidget}, and \link[webshot]{webshot} for
 For more refined control over the static file output, you should save the heatmaply object using \link[webshot]{webshot}.
 
 Another example: heatmaply(x, file = c("heatmaply_plot.html", "heatmaply_plot.png"))}
+
+\item{width, height}{The width and height of the image saved. Default is
+which uses 800 x 500 pixels.}
 
 \item{long_data}{Data in long format. Replaces x, so both should not be used.
 Colnames must be c("name", "variable", "value"). If you do not have a names

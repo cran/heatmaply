@@ -172,22 +172,24 @@ heatmapr <- function(x,
 
   ## update hclust/dist functions?
   ##====================
-  if(!is.null(dist_method)) {
+  distfun <- match.fun(distfun)
+  if (!is.null(dist_method)) {
     distfun_old <- distfun
     distfun <- function(x) {distfun_old(x, method = dist_method)}
   }
-  if(!is.null(hclust_method)) {
+  if (!is.null(hclust_method)) {
     hclustfun_old <- hclustfun
     hclustfun <- function(x) {hclustfun_old(x, method = hclust_method)}
   }
 
 
-  if(missing(distfun_row)) distfun_row <- distfun
-  if(missing(hclustfun_row)) hclustfun_row <- hclustfun
-  if(missing(distfun_col)) distfun_col <- distfun
-  if(missing(hclustfun_col)) hclustfun_col <- hclustfun
-
-
+  if (missing(distfun_row)) distfun_row <- distfun
+  if (missing(hclustfun_row)) hclustfun_row <- hclustfun
+  if (missing(distfun_col)) distfun_col <- distfun
+  if (missing(hclustfun_col)) hclustfun_col <- hclustfun
+  
+  distfun_row <- match.fun(distfun_row)
+  distfun_col <- match.fun(distfun_col)
 
   ## x is a matrix!
   ##====================
@@ -226,6 +228,18 @@ heatmapr <- function(x,
     }
   }
 
+  ## Scale the data?
+  ##====================
+  scale <- match.arg(scale)
+
+  if(scale == "row") {
+    x <- sweep(x, 1, rowMeans(x, na.rm = na.rm))
+    x <- sweep(x, 1, apply(x, 1, sd, na.rm = na.rm), "/")
+  }
+  else if(scale == "column") {
+    x <- sweep(x, 2, colMeans(x, na.rm = na.rm))
+    x <- sweep(x, 2, apply(x, 2, sd, na.rm = na.rm), "/")
+  }
 
   ## Dendrograms for Row/Column
   ##=======================
@@ -403,19 +417,6 @@ heatmapr <- function(x,
 
   rowDend <- if(is.dendrogram(Rowv)) Rowv else NULL
   colDend <- if(is.dendrogram(Colv)) Colv else NULL
-
-  ## Scale the data?
-  ##====================
-  scale <- match.arg(scale)
-
-  if(scale == "row") {
-    x <- sweep(x, 1, rowMeans(x, na.rm = na.rm))
-    x <- sweep(x, 1, apply(x, 1, sd, na.rm = na.rm), "/")
-  }
-  else if(scale == "column") {
-    x <- sweep(x, 2, colMeans(x, na.rm = na.rm))
-    x <- sweep(x, 2, apply(x, 2, sd, na.rm = na.rm), "/")
-  }
 
 
   ## cellnote

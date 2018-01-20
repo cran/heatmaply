@@ -1,8 +1,19 @@
-
-
-
 context("heatmaply misc")
 
+test_that("node argument works", {
+  rrapply <- function(A, FUN, ...) mapply(function(a, B) lapply(
+        B,
+        function(x) FUN(a, x, ...)
+      ), a = A, MoreArgs = list(B = A))
+  cor.tests <- rrapply(mtcars, cor.test) # a matrix of cor.tests
+  p <- apply(cor.tests, 1:2, function(x) x[[1]]$p.value) # and it's there
+  r <- cor(mtcars)
+  h <- heatmaply(
+    r, node_type = "scatter",
+    point_size_name = "p",
+    point_size_mat = -log10(p)
+  )
+})
 
 test_that("non-numerics moved to row_side_colors", {
   mtcars[, ncol(mtcars) + 1] <- "a"
@@ -24,7 +35,7 @@ test_that("heatmaply on matrix, and cexRow/Col", {
 
 
 test_that("grid_color and hide_colorbar", {
-  h <- heatmaply(mtcars[1:5,1:5], grid_color = "black", hide_colorbar = TRUE)
+  h <- heatmaply(mtcars[1:5, 1:5], grid_color = "black", hide_colorbar = TRUE)
   expect_is(h, "plotly")
 })
 
@@ -58,11 +69,11 @@ test_that("cellnote", {
 })
 
 test_that("showticklabels", {
-  h <- heatmaply(mtcars, showticklabels=TRUE)
+  h <- heatmaply(mtcars, showticklabels = TRUE)
   expect_is(h, "plotly")
-  h <- heatmaply(mtcars, showticklabels=c(FALSE, FALSE))
+  h <- heatmaply(mtcars, showticklabels = c(FALSE, FALSE))
   expect_is(h, "plotly")
-  expect_warning(expect_error(heatmaply(mtcars, showticklabels="a")))
+  expect_warning(expect_error(heatmaply(mtcars, showticklabels = "a")))
 })
 
 ## This relies on PhantomJS... it's failing a lot so comment it
@@ -80,44 +91,54 @@ test_that("showticklabels", {
 
 test_that("correlation arguments work", {
   lapply(c("pearson", "spearman", "kendall"), function(method) {
-    expect_is(heatmaply(mtcars, distfun=method), "plotly")
+    expect_is(heatmaply(mtcars, distfun = method), "plotly")
   })
 })
 
 test_that("long_data works", {
-    mdf <- reshape2::melt(as.matrix(mtcars))
-    colnames(mdf) <- c("name", "variable", "value")
-    expect_is(heatmaply(long_data = mdf), "plotly")
-    expect_error(heatmaply(x, mtcars, long_data = mdf))
+  mdf <- reshape2::melt(as.matrix(mtcars))
+  colnames(mdf) <- c("name", "variable", "value")
+  expect_is(heatmaply(long_data = mdf), "plotly")
+  expect_error(heatmaply(x, mtcars, long_data = mdf))
 })
 
 test_that("heatmaply_na works", {
-    m <- as.matrix(mtcars)
-    m[1:5] <- NA
-    expect_is(heatmaply_na(m), "plotly")
+  m <- as.matrix(mtcars)
+  m[1:5] <- NA
+  expect_is(heatmaply_na(m), "plotly")
 })
 
 test_that("heatmaply_cor works", {
-    m <- cor(as.matrix(mtcars))
-    expect_is(heatmaply_cor(m), "plotly")
+  m <- cor(as.matrix(mtcars))
+  expect_is(heatmaply_cor(m), "plotly")
 })
 
 
 test_that("dengrogram=TRUE works", {
-    expect_is(heatmaply(mtcars, dendrogram=TRUE), "plotly")
+  expect_is(heatmaply(mtcars, dendrogram = TRUE), "plotly")
 })
 
 test_that("limits warning", {
-    expect_warning(heatmaply(mtcars, limits=c(4, 5)), 
-        "Lower limit is not*")
+  expect_warning(
+    heatmaply(mtcars, limits = c(4, 5)),
+    "Lower limit is not*"
+  )
 })
 
 test_that("grid_gap works", {
-    expect_is(heatmaply(mtcars, grid_gap = 1), "plotly")
+  expect_is(heatmaply(mtcars, grid_gap = 1), "plotly")
 })
 
 
 test_that("subplot_* needs to be correct", {
-    expect_error(heatmaply(mtcars, subplot_heights = rep(1, 10)))
-    expect_error(heatmaply(mtcars, subplot_widths = rep(1, 10)))
+  expect_error(heatmaply(mtcars, subplot_heights = rep(1, 10)))
+  expect_error(heatmaply(mtcars, subplot_widths = rep(1, 10)))
+})
+
+test_that("custom_hovertext works", {
+  mat <- as.matrix(mtcars)
+  suppressWarnings(mat[] <- letters)
+  for (plot_method in c("plotly", "ggplot")) {
+    expect_error(heatmaply(mtcars, plot_method = plot_method, custom_hovertext = mat), NA)
+  }
 })

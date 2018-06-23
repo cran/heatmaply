@@ -143,7 +143,7 @@ ggplot_heatmap <- function(xx,
   # TODO:
   # http://stackoverflow.com/questions/15921799/draw-lines-around-specific-areas-in-geom-tile
   # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-  p <- ggplot(mdf, aes_string(x = col, y = row)) +
+  p <- ggplot(mdf, aes_string(x = paste_aes(col), y = paste_aes(row))) +
     ## Using the text aes produces a warning... Not ideal!
     suppressWarnings(do.call(geom, geom_args)) +
     scale_fill_gradient_fun +
@@ -190,7 +190,7 @@ ggplot_heatmap <- function(xx,
 melt_df <- function(x, label_names) {
   # heatmap
   # xx <- x$matrix$data
-  if (!is.data.frame(x)) df <- as.data.frame(x)
+  df <- as.data.frame(x)
 
   row <- label_names[[1]]
   col <- label_names[[2]]
@@ -672,7 +672,11 @@ plotly_side_color_plot <- function(df, palette = NULL,
   if (type == "column") {
     df_nums <- t(df_nums)
   }
-  key_title <- paste(type, "annotation")
+  if (ncol(df) == 1) {
+    key_title <- colnames(df)  
+  } else {
+    key_title <- paste(gsub("^(\\w)", "\\U\\1", type, perl = TRUE), "annotation")
+  }
 
   text_mat <- data
   text_mat[] <- lapply(
@@ -705,7 +709,7 @@ plotly_side_color_plot <- function(df, palette = NULL,
     colorscale = discrete_colorscale(levs2colors),
     colorbar = list(
       # Capitalise first letter
-      title = paste(gsub("^(\\w)", "\\U\\1", type, perl = TRUE), "annotation"),
+      title = key_title,
       tickmode = "array",
       ## Issue #137
       tickvals = seq(

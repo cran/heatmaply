@@ -1,11 +1,11 @@
-ae5a7d7972308ab996dbd04ee4bb3a82 *ChangeLog
-e557a9a44d4a1bfa38be2a435b1dbe4e *DESCRIPTION
+f918faef7c42aaf1ad45c6433220a5d8 *ChangeLog
+83dbf528fa31e6cb989396ac83c80f7b *DESCRIPTION
 3e111ac6f50ed9adc24d5c3550d24550 *NAMESPACE
-17d33db8d23b70848d43a020f185adab *NEWS
-17d33db8d23b70848d43a020f185adab *NEWS.md
+16cfa1a5387592401136f453312a932b *NEWS
+3e6c638fd84d21498a6c55c90b4f489b *NEWS.md
 68cea1e6bf12c3adc35e7ca99d4911ae *R/RColorBrewer.R
 e5a39ba88a58bdafc730e998e7e0e20f *R/distfuns.R
-0a73459914a2ed4b8da1dc6d3d844c44 *R/heatmaply.R
+fe57326d2cbc2c51f04b90a926662917 *R/heatmaply.R
 efc5689941ef19abb18c27d3503a0178 *R/heatmapr.R
 4bef78fdd503bf75247a97c3e43e0018 *R/is.na10.R
 d04699186eed8427fbf25495dc3a9ed4 *R/percentize.R
@@ -16,7 +16,7 @@ be41b91a3b436d3e7ede40efcc658ed1 *R/zzz.R
 3aa7037c76d1325c5ad992480f31a293 *inst/CITATION
 62a9965e1a3f6f999f515067fb6e4806 *inst/doc/heatmaply.R
 47c3a236a490e65c09189f105ec9120f *inst/doc/heatmaply.Rmd
-8e1d3bacbfb7b20a61753387f83921d2 *inst/doc/heatmaply.html
+2adc5358bddefc4c0e8973b908ceb946 *inst/doc/heatmaply.html
 277556b4a4ec70253cfe017412764eb6 *man/RColorBrewer_colors.Rd
 21d3177a6626c52a750114b7880431bd *man/ggplot_side_color_plot.Rd
 5681c54706afcab3db5437e96cd1d218 *man/heatmaply.Rd

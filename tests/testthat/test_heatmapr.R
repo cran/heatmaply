@@ -22,3 +22,20 @@ test_that("scale", {
   expect_is(h1 <- heatmapr(cor(mtcars), scale = "row", symm = TRUE), "heatmapr")
   expect_is(h2 <- heatmapr(cor(mtcars), scale = "col", symm = TRUE), "heatmapr")
 })
+
+test_that("show_dendrogram error conditions", {
+  expect_error(heatmapr(mtcars, show_dendrogram = 1))
+  expect_error(heatmapr(mtcars, show_dendrogram = rep(TRUE, 3)))
+  expect_error(heatmapr(mtcars, show_dendrogram = NULL))
+  expect_error(heatmapr(mtcars, show_dendrogram = TRUE), NA)
+  expect_error(heatmapr(mtcars, show_dendrogram = c(TRUE, FALSE)), NA)
+
+})
+
+
+test_that("create_dend works", {
+  for (ser in c("mean", "none", "OLO", "GW")) {
+    expect_error(create_dend(as.matrix(mtcars), ser, dist, hclust, TRUE), NA)
+    expect_error(create_dend(as.matrix(mtcars), ser, dist, hclust, FALSE), NA)
+  }
+})

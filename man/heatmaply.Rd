@@ -14,65 +14,156 @@ heatmaply_na(x, grid_gap = 1, colors = c("grey80", "grey20"), ...)
 
 heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
 
-\method{heatmaply}{default}(x, colors = viridis(n = 256, alpha = 1, begin
-  = 0, end = 1, option = "viridis"), limits = NULL,
-  na.value = "grey50", row_text_angle = 0, column_text_angle = 45,
-  subplot_margin = 0, cellnote = NULL,
-  draw_cellnote = !is.null(cellnote), cellnote_color = "auto",
-  cellnote_textposition = "middle right", cellnote_size = 12, Rowv,
-  Colv, distfun = dist, hclustfun = hclust, dist_method = NULL,
-  hclust_method = NULL, distfun_row, hclustfun_row, distfun_col,
-  hclustfun_col, dendrogram = c("both", "row", "column", "none"),
-  reorderfun = function(d, w) reorder(d, w), k_row = 1, k_col = 1,
-  symm = FALSE, revC, scale = c("none", "row", "column"),
-  na.rm = TRUE, row_dend_left = FALSE, margins = c(NA, NA, NA, NA),
-  ..., scale_fill_gradient_fun = NULL, grid_color = NA, grid_gap = 0,
-  srtRow, srtCol, xlab = "", ylab = "", main = "", titleX = TRUE,
-  titleY = TRUE, hide_colorbar = FALSE, key.title = NULL,
-  return_ppxpy = FALSE, row_side_colors, row_side_palette = NULL,
-  col_side_colors, col_side_palette = NULL, ColSideColors = NULL,
-  RowSideColors = NULL, seriate = c("OLO", "mean", "none", "GW"),
-  heatmap_layers = NULL, side_color_layers = NULL,
-  branches_lwd = 0.6, file, width = NULL, height = NULL, long_data,
-  plot_method = c("ggplot", "plotly"), label_names = NULL,
-  fontsize_row = 10, fontsize_col = 10, cexRow, cexCol,
-  subplot_widths = NULL, subplot_heights = NULL, colorbar_len = 0.3,
+\method{heatmaply}{default}(
+  x,
+  colors = viridis(n = 256, alpha = 1, begin = 0, end = 1, option = "viridis"),
+  limits = NULL,
+  na.value = "grey50",
+  row_text_angle = 0,
+  column_text_angle = 45,
+  subplot_margin = 0,
+  cellnote = NULL,
+  draw_cellnote = !is.null(cellnote),
+  cellnote_color = "auto",
+  cellnote_textposition = "middle right",
+  cellnote_size = 12,
+  Rowv,
+  Colv,
+  distfun = dist,
+  hclustfun = hclust,
+  dist_method = NULL,
+  hclust_method = NULL,
+  distfun_row,
+  hclustfun_row,
+  distfun_col,
+  hclustfun_col,
+  dendrogram = c("both", "row", "column", "none"),
+  show_dendrogram = c(TRUE, TRUE),
+  reorderfun = function(d, w) reorder(d, w),
+  k_row = 1,
+  k_col = 1,
+  symm = FALSE,
+  revC,
+  scale = c("none", "row", "column"),
+  na.rm = TRUE,
+  row_dend_left = FALSE,
+  margins = c(NA, NA, NA, NA),
+  ...,
+  scale_fill_gradient_fun = NULL,
+  grid_color = NA,
+  grid_gap = 0,
+  srtRow,
+  srtCol,
+  xlab = "",
+  ylab = "",
+  main = "",
+  titleX = TRUE,
+  titleY = TRUE,
+  hide_colorbar = FALSE,
+  key.title = NULL,
+  return_ppxpy = FALSE,
+  row_side_colors,
+  row_side_palette = NULL,
+  col_side_colors,
+  col_side_palette = NULL,
+  ColSideColors = NULL,
+  RowSideColors = NULL,
+  seriate = c("OLO", "mean", "none", "GW"),
+  heatmap_layers = NULL,
+  side_color_layers = NULL,
+  branches_lwd = 0.6,
+  file,
+  width = NULL,
+  height = NULL,
+  long_data,
+  plot_method = c("ggplot", "plotly"),
+  label_names = NULL,
+  fontsize_row = 10,
+  fontsize_col = 10,
+  cexRow,
+  cexCol,
+  subplot_widths = NULL,
+  subplot_heights = NULL,
+  colorbar_len = 0.3,
   colorbar_xanchor = if (row_dend_left) "right" else "left",
-  colorbar_yanchor = "bottom", colorbar_xpos = if (row_dend_left) -0.1
-  else 1.1, colorbar_ypos = 0, showticklabels = c(TRUE, TRUE),
-  dynamicTicks = FALSE, grid_size = 0.1, node_type = "heatmap",
-  point_size_mat = NULL, point_size_name = "Point size",
+  colorbar_yanchor = "bottom",
+  colorbar_xpos = if (row_dend_left) -0.1 else 1.1,
+  colorbar_ypos = 0,
+  showticklabels = c(TRUE, TRUE),
+  dynamicTicks = FALSE,
+  grid_size = 0.1,
+  node_type = "heatmap",
+  point_size_mat = NULL,
+  point_size_name = "Point size",
   label_format_fun = function(...) format(..., digits = 4),
-  labRow = NULL, labCol = NULL, custom_hovertext = NULL,
-  col = NULL, dend_hoverinfo = TRUE)
+  labRow = NULL,
+  labCol = NULL,
+  custom_hovertext = NULL,
+  col = NULL,
+  dend_hoverinfo = TRUE,
+  side_color_colorbar_len = 0.3
+)
 
-\method{heatmaply}{heatmapr}(x, colors = viridis(n = 256, alpha = 1,
-  begin = 0, end = 1, option = "viridis"), limits = NULL,
-  na.value = "grey50", row_text_angle = 0, column_text_angle = 45,
-  subplot_margin = 0, row_dend_left = FALSE, margins = c(NA, NA, NA,
-  NA), ..., scale_fill_gradient_fun = scale_fill_gradientn(colors = if
-  (is.function(colors)) colors(256) else colors, na.value = na.value,
-  limits = limits), grid_color = NA, grid_gap = 0, srtRow, srtCol,
-  xlab = "", ylab = "", main = "", titleX = TRUE, titleY = TRUE,
-  hide_colorbar = FALSE, key.title = NULL, return_ppxpy = FALSE,
-  draw_cellnote = FALSE, cellnote_color = "auto",
-  cellnote_textposition = "middle right", cellnote_size = 12,
-  row_side_colors = x[["row_side_colors"]], row_side_palette = NULL,
-  col_side_colors = x[["col_side_colors"]], col_side_palette = NULL,
-  plot_method = c("ggplot", "plotly"), ColSideColors, RowSideColors,
-  heatmap_layers = NULL, side_color_layers = NULL,
-  branches_lwd = 0.6, label_names = c("row", "column", "value"),
-  fontsize_row = 10, fontsize_col = 10, subplot_widths = NULL,
-  subplot_heights = NULL, colorbar_xanchor = if (row_dend_left) "right"
-  else "left", colorbar_yanchor = "bottom", colorbar_xpos = if
-  (row_dend_left) -0.1 else 1.1, colorbar_ypos = 0, colorbar_len = 0.3,
-  showticklabels = c(TRUE, TRUE), dynamicTicks = FALSE,
-  node_type = c("scatter", "heatmap"), grid_size = 0.1,
+\method{heatmaply}{heatmapr}(
+  x,
+  colors = viridis(n = 256, alpha = 1, begin = 0, end = 1, option = "viridis"),
+  limits = NULL,
+  na.value = "grey50",
+  row_text_angle = 0,
+  column_text_angle = 45,
+  subplot_margin = 0,
+  row_dend_left = FALSE,
+  margins = c(NA, NA, NA, NA),
+  ...,
+  scale_fill_gradient_fun = scale_fill_gradientn(colors = if (is.function(colors))
+    colors(256) else colors, na.value = na.value, limits = limits),
+  grid_color = NA,
+  grid_gap = 0,
+  srtRow,
+  srtCol,
+  xlab = "",
+  ylab = "",
+  main = "",
+  titleX = TRUE,
+  titleY = TRUE,
+  hide_colorbar = FALSE,
+  key.title = NULL,
+  return_ppxpy = FALSE,
+  draw_cellnote = FALSE,
+  cellnote_color = "auto",
+  cellnote_textposition = "middle right",
+  cellnote_size = 12,
+  row_side_colors = x[["row_side_colors"]],
+  row_side_palette = NULL,
+  col_side_colors = x[["col_side_colors"]],
+  col_side_palette = NULL,
+  plot_method = c("ggplot", "plotly"),
+  ColSideColors,
+  RowSideColors,
+  heatmap_layers = NULL,
+  side_color_layers = NULL,
+  branches_lwd = 0.6,
+  label_names = c("row", "column", "value"),
+  fontsize_row = 10,
+  fontsize_col = 10,
+  subplot_widths = NULL,
+  subplot_heights = NULL,
+  colorbar_xanchor = if (row_dend_left) "right" else "left",
+  colorbar_yanchor = "bottom",
+  colorbar_xpos = if (row_dend_left) -0.1 else 1.1,
+  colorbar_ypos = 0,
+  colorbar_len = 0.3,
+  showticklabels = c(TRUE, TRUE),
+  dynamicTicks = FALSE,
+  node_type = c("scatter", "heatmap"),
+  grid_size = 0.1,
   point_size_mat = x[["matrix"]][["point_size_mat"]],
-  point_size_name = "Point size", label_format_fun = function(...)
-  format(..., digits = 4),
+  point_size_name = "Point size",
+  label_format_fun = function(...) format(..., digits = 4),
   custom_hovertext = x[["matrix"]][["custom_hovertext"]],
-  dend_hoverinfo = TRUE)
+  dend_hoverinfo = TRUE,
+  side_color_colorbar_len = 0.3
+)
 }
 \arguments{
 \item{x}{can either be a heatmapr object, or a numeric matrix
@@ -155,7 +246,10 @@ or "minkowski".}
 \item{hclust_method}{default is NULL (which results in "complete" to be used).
 Can accept alternative character strings indicating the
 method to be passed to hclustfun By default hclustfun is \link{hclust} hence
-this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).}
+this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+Specifying hclust_method=NA causes heatmaply to use 
+\code{\link[dendextend]{find_dend}} to find the "optimal" dendrogram for
+the data.}
 
 \item{distfun_row}{distfun for row dendrogram only.}
 
@@ -165,11 +259,15 @@ this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA
 
 \item{hclustfun_col}{hclustfun for col dendrogram only.}
 
-\item{dendrogram}{character string indicating whether to draw 'none', 'row',
-'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv)
-is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv
-(or Colv) arguments are honoured.
+\item{dendrogram}{character string indicating whether to compute 'none', 
+'row', 'column' or 'both' dendrograms. Defaults to 'both'. 
+However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', 
+then a warning is issued and Rowv (or Colv) arguments are honoured.
 It also accepts TRUE/FALSE as synonyms for "both"/"none".}
+
+\item{show_dendrogram}{Logical vector of length two, controlling whether 
+the row and/or column dendrograms are displayed. If a logical scalar is 
+provided, it is repeated to become a logical vector of length two.}
 
 \item{reorderfun}{function(d, w) of dendrogram and weights for reordering the
 row and column dendrograms. The default uses stats{reorder.dendrogram}}
@@ -362,6 +460,11 @@ if "ggplot" then it is appended to the existing text.}
 
 \item{dend_hoverinfo}{Boolean value which controls whether mouseover text 
 is shown for the row and column dendrograms.}
+
+\item{side_color_colorbar_len}{As with colorbar_len, this controls the
+length of the colorbar/color key relative to the total plot height. 
+This argument controls the colorbar_len of the side colour plots. 
+Only used if plot_method = "plotly".}
 }
 \description{
 An object of class heatmapr includes all the needed information

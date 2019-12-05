@@ -97,17 +97,23 @@ is.plotly <- function(x) {
 #' Can accept alternative character strings indicating the
 #' method to be passed to hclustfun By default hclustfun is \link{hclust} hence
 #' this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#' Specifying hclust_method=NA causes heatmaply to use 
+#' \code{\link[dendextend]{find_dend}} to find the "optimal" dendrogram for
+#' the data.
 #'
 #' @param distfun_row distfun for row dendrogram only.
 #' @param hclustfun_row hclustfun for col dendrogram only.
 #' @param distfun_col distfun for row dendrogram only.
 #' @param hclustfun_col hclustfun for col dendrogram only.
 #'
-#' @param dendrogram character string indicating whether to draw 'none', 'row',
-#' 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv)
-#' is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv
-#' (or Colv) arguments are honoured.
+#' @param dendrogram character string indicating whether to compute 'none', 
+#' 'row', 'column' or 'both' dendrograms. Defaults to 'both'. 
+#' However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', 
+#' then a warning is issued and Rowv (or Colv) arguments are honoured.
 #' It also accepts TRUE/FALSE as synonyms for "both"/"none".
+#' @param show_dendrogram Logical vector of length two, controlling whether 
+#' the row and/or column dendrograms are displayed. If a logical scalar is 
+#' provided, it is repeated to become a logical vector of length two.
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the
 #' row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
@@ -291,6 +297,10 @@ is.plotly <- function(x) {
 #' backward compatibility with gplots::heatmap.2.
 #' @param dend_hoverinfo Boolean value which controls whether mouseover text 
 #' is shown for the row and column dendrograms.
+#' @param side_color_colorbar_len As with colorbar_len, this controls the
+#' length of the colorbar/color key relative to the total plot height. 
+#' This argument controls the colorbar_len of the side colour plots. 
+#' Only used if plot_method = "plotly".
 #'
 #' @export
 #' @examples
@@ -510,6 +520,7 @@ heatmaply.default <- function(x,
                               hclustfun_col,
 
                               dendrogram = c("both", "row", "column", "none"),
+                              show_dendrogram = c(TRUE, TRUE),
                               reorderfun = function(d, w) reorder(d, w),
 
                               k_row = 1,
@@ -571,10 +582,11 @@ heatmaply.default <- function(x,
                               labRow = NULL, labCol = NULL,
                               custom_hovertext = NULL,
                               col = NULL,
-                              dend_hoverinfo = TRUE) {
+                              dend_hoverinfo = TRUE,
+                              side_color_colorbar_len = 0.3) {
   if (!missing(long_data)) {
     if (!missing(x)) {
-      warning("x and long_data should not be used together")
+      stop("x and long_data should not be used together")
     }
     assert_that(
       ncol(long_data) == 3,
@@ -623,11 +635,16 @@ heatmaply.default <- function(x,
   }
   dendrogram <- match.arg(dendrogram)
 
-  if (!(is.data.frame(x) | is.matrix(x))) stop("x must be either a data.frame or a matrix.")
+  if (!(is.data.frame(x) | is.matrix(x))) {
+    stop("x must be either a data.frame or a matrix.")
+  }
 
-  if (!missing(srtRow)) row_text_angle <- srtRow
-  if (!missing(srtCol)) column_text_angle <- srtCol
-
+  if (!missing(srtRow)) {
+    row_text_angle <- srtRow
+  }
+  if (!missing(srtCol)) {
+    column_text_angle <- srtCol
+  }
   if (!is.null(ColSideColors)) {
     col_side_colors <- ColSideColors
   }
@@ -635,8 +652,12 @@ heatmaply.default <- function(x,
     row_side_colors <- RowSideColors
   }
 
-  if (!missing(cexRow)) fontsize_row <- if (is.numeric(cexRow)) cexRow * 10 else cexRow
-  if (!missing(cexCol)) fontsize_col <- if (is.numeric(cexCol)) cexCol * 10 else cexCol
+  if (!missing(cexRow)) {
+    fontsize_row <- if (is.numeric(cexRow)) cexRow * 10 else cexRow
+  }
+  if (!missing(cexCol)) {
+    fontsize_col <- if (is.numeric(cexCol)) cexCol * 10 else cexCol
+  }
 
   # TODO: maybe create heatmaply.data.frame heatmaply.matrix instead.
   #       But right now I am not sure this would be needed.
@@ -665,14 +686,14 @@ heatmaply.default <- function(x,
 
   if (!is.null(labRow)) {
     if (all(is.na(labRow))) {
-      showticklabels[2] <- FALSE
+      showticklabels[[2]] <- FALSE
     }
   } else {
     labRow <- rownames(x)
   }
   if (!is.null(labCol)) {
     if (all(is.na(labCol))) {
-      showticklabels[1] <- FALSE
+      showticklabels[[1]] <- FALSE
     }
   } else {
     labCol <- colnames(x)
@@ -711,6 +732,7 @@ heatmaply.default <- function(x,
     hclustfun_col = hclustfun_col,
 
     dendrogram = dendrogram,
+    show_dendrogram = show_dendrogram,
     reorderfun = reorderfun,
 
     k_row = k_row,
@@ -771,7 +793,8 @@ heatmaply.default <- function(x,
     node_type = node_type,
     point_size_name = point_size_name,
     label_format_fun = label_format_fun,
-    dend_hoverinfo = dend_hoverinfo
+    dend_hoverinfo = dend_hoverinfo,
+    side_color_colorbar_len = side_color_colorbar_len
   )
 
   # TODO: think more on what should be passed in "..."
@@ -847,7 +870,9 @@ heatmaply.heatmapr <- function(x,
                                point_size_name = "Point size",
                                label_format_fun = function(...) format(..., digits = 4),
                                custom_hovertext = x[["matrix"]][["custom_hovertext"]],
-                               dend_hoverinfo = TRUE) {
+                               dend_hoverinfo = TRUE,
+                               side_color_colorbar_len = 0.3) {
+
   node_type <- match.arg(node_type)
   plot_method <- match.arg(plot_method)
   cellnote_textposition <- match.arg(
@@ -933,7 +958,7 @@ heatmaply.heatmapr <- function(x,
     if (plot_method == "ggplot") {
       col_ggdend <- as.ggdend(cols)
       xlims <- c(0.5, nrow(col_ggdend$labels) + 0.5)
-      py <- ggplot(cols, labels = FALSE) + 
+      py <- ggplot(cols, labels = FALSE, na.rm = TRUE) + 
         theme_bw() +
         coord_cartesian(expand = FALSE, xlim = xlims) +
         theme_clear_grid_dends
@@ -950,7 +975,7 @@ heatmaply.heatmapr <- function(x,
       row_ggdend <- as.ggdend(rows)
       ylims <- c(0.5, nrow(row_ggdend$labels) + 0.5)
 
-      px <- ggplot(row_ggdend, labels = FALSE) +
+      px <- ggplot(row_ggdend, labels = FALSE, na.rm = TRUE) +
         theme_bw() +
         coord_flip(expand = FALSE, xlim = ylims) +
         theme_clear_grid_dends
@@ -981,7 +1006,8 @@ heatmaply.heatmapr <- function(x,
       row_dend_left = row_dend_left,
       label_names = label_names,
       type = node_type,
-      fontsize_row = fontsize_row, fontsize_col = fontsize_col,
+      fontsize_row = fontsize_row, 
+      fontsize_col = fontsize_col,
       point_size_mat = point_size_mat,
       point_size_name = point_size_name,
       label_format_fun = label_format_fun,
@@ -1039,6 +1065,7 @@ heatmaply.heatmapr <- function(x,
         palette = row_side_palette,
         fontsize = fontsize_col,
         is_colors = !is.null(RowSideColors),
+        colorbar_len = side_color_colorbar_len,
         label_name = label_names[[1]]
       )
     }
@@ -1047,8 +1074,6 @@ heatmaply.heatmapr <- function(x,
   if (is.null(col_side_colors)) {
     pc <- NULL
   } else {
-    warning("The hover text for col_side_colors is currently not implemented (due to an issue in plotly). We hope this would get resolved in future releases.")
-
     side_color_df <- x[["col_side_colors"]]
     if (is.matrix(side_color_df)) side_color_df <- as.data.frame(side_color_df)
     assert_that(
@@ -1062,7 +1087,7 @@ heatmaply.heatmapr <- function(x,
         text_angle = row_text_angle,
         palette = col_side_palette,
         is_colors = !is.null(ColSideColors),
-        fontsize = fontsize_col,
+        fontsize = fontsize_row,
         label_name = label_names[[2]]
       ) + side_color_layers
     } else {
@@ -1071,8 +1096,9 @@ heatmaply.heatmapr <- function(x,
         type = "column",
         text_angle = row_text_angle,
         palette = col_side_palette,
-        fontsize = fontsize_col,
+        fontsize = fontsize_row,
         is_colors = !is.null(ColSideColors),
+        colorbar_len = side_color_colorbar_len,
         label_name = label_names[[2]]
       )
     }
@@ -1095,7 +1121,7 @@ heatmaply.heatmapr <- function(x,
   # turn p, px, and py to plotly objects if necessary
   if (!is.plotly(p)) {
     p <- ggplotly(p, dynamicTicks = dynamicTicks, tooltip = "text") %>%
-      layout(showlegend = TRUE)
+      layout(showlegend = FALSE)
   }
 
   if (draw_cellnote) {
@@ -1104,18 +1130,18 @@ heatmaply.heatmapr <- function(x,
       cellnote_color <- predict_colors(p, plot_method = plot_method)
     }
 
-    df <- as.data.frame(x[["cellnote"]])
-    df$row <- 1:nrow(df)
-    mdf <- reshape2::melt(df, id.vars = "row")
+    df <- as.data.frame(x[["matrix"]][["cellnote"]])
+    df[["_row"]] <- seq_len(nrow(df))
+    mdf <- reshape2::melt(df, id.vars = "_row")
     ## TODO: Enforce same dimnames to ensure it's not scrambled?
     # mdf$variable <- factor(mdf$variable, levels = p$x$layout$xaxis$ticktext)
-    mdf$variable <- as.numeric(as.factor(mdf$variable))
+    mdf$variable <- as.factor(mdf$variable)
+    mdf$variable <- as.numeric(mdf$variable)
     mdf$value <- factor(mdf$value)
-
     p <- p %>% add_trace(
       data = mdf,
       x = ~ variable,
-      y = ~ row,
+      y = ~ `_row`,
       text = ~ value,
       inherit = FALSE,
       type = "scatter",
@@ -1154,8 +1180,6 @@ heatmaply.heatmapr <- function(x,
   )
   if (hide_colorbar) {
     p <- hide_colorbar(p)
-    # px <- hide_colorbar(px)
-    # py <- hide_colorbar(py)
   }
 
   # Adjust top based on whether main is empty or not.
@@ -1176,9 +1200,15 @@ heatmaply.heatmapr <- function(x,
   # add a white grid
   if (grid_gap > 0) {
     p <- style(p, xgap = grid_gap, ygap = grid_gap, traces = 1)
-    # doesn't seem to work.
-    # if(!is.null(pr)) pr <- style(pr, xgap = grid_gap)
-    # if(!is.null(pc)) pc <- style(pc, ygap = grid_gap)
+    # doesn't seem to work for ggplot2.
+    if (plot_method == "plotly") {
+      if (!is.null(pr)) {
+        pr <- style(pr, ygap = grid_gap)
+      }
+      if (!is.null(pc)) {
+        pc <- style(pc, xgap = grid_gap)
+      }
+    }
   }
 
 
@@ -1205,10 +1235,19 @@ heatmaply.heatmapr <- function(x,
   }
 
   heatmap_subplot <- heatmap_subplot_from_ggplotly(
-    p = p, px = px, py = py,
-    row_dend_left = row_dend_left, subplot_margin = subplot_margin,
-    widths = subplot_widths, heights = subplot_heights,
-    titleX = titleX, titleY = titleY, pr = pr, pc = pc, plot_method = plot_method
+    p = p, 
+    px = px, 
+    py = py,
+    row_dend_left = row_dend_left, 
+    subplot_margin = subplot_margin,
+    widths = subplot_widths, 
+    heights = subplot_heights,
+    titleX = titleX, 
+    titleY = titleY, 
+    pr = pr, 
+    pc = pc, 
+    plot_method = plot_method,
+    showticklabels = showticklabels
   )
   l <- layout(
     heatmap_subplot,
@@ -1230,46 +1269,36 @@ heatmaply.heatmapr <- function(x,
 
 
 
-
+default_dims <- function(px, pr) {
+  if (!is.null(px)) {
+    if (is.null(pr)) {
+      widths <- c(0.8, 0.2)
+    } else {
+      widths <- c(0.7, 0.1, 0.2)
+    }
+  } else {
+    if (is.null(pr)) {
+      widths <- 1
+    } else {
+      widths <- c(0.9, 0.1)
+    }
+  }
+  widths
+}
 
 
 heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
                                           row_dend_left = FALSE, subplot_margin = 0,
                                           titleX = TRUE, titleY = TRUE,
                                           widths=NULL, heights=NULL,
-                                          plot_method) {
-  if (is.null(widths)) {
-    if (!is.null(px)) {
-      if (is.null(pr)) {
-        widths <- c(0.8, 0.2)
-      } else {
-        widths <- c(0.7, 0.1, 0.2)
-      }
-    } else {
-      if (is.null(pr)) {
-        widths <- 1
-      } else {
-        widths <- c(0.9, 0.1)
-      }
-    }
-    if (row_dend_left) widths <- rev(widths)
+                                          plot_method,
+                                          showticklabels=c(TRUE, TRUE)) {
+  widths <- widths %||% default_dims(px, pr)
+  if (row_dend_left) {
+    widths <- rev(widths)
   }
+  heights <- heights %||% rev(default_dims(py, pc))
 
-  if (is.null(heights)) {
-    if (!is.null(py)) {
-      if (is.null(pc)) {
-        heights <- c(0.2, 0.8)
-      } else {
-        heights <- c(0.2, 0.1, 0.7)
-      }
-    } else {
-      if (is.null(pc)) {
-        heights <- 1
-      } else {
-        heights <- c(0.1, 0.9)
-      }
-    }
-  }
 
   # make different plots based on which dendrogram and sidecolors we have
   row1_list <- list(py, plotly_empty(), plotly_empty())
@@ -1319,8 +1348,10 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
         plots,
         nrows = nrows,
         widths = widths,
-        shareX = TRUE, shareY = TRUE,
-        titleX = titleX, titleY = titleY,
+        shareX = TRUE, 
+        shareY = TRUE,
+        titleX = titleX, 
+        titleY = titleY,
         margin = subplot_margin,
         heights = heights
       )
@@ -1334,7 +1365,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
       l <- list(
         anchor = paste0("x", str),
         side = "right",
-        showticklabels = TRUE
+        showticklabels = showticklabels[[2]]
       )
       num_cols <- sum(!ind_null_col)
       if (num_cols == 1) {

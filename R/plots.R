@@ -153,12 +153,15 @@ ggplot_heatmap <- function(xx,
     theme(
       axis.text.x = element_text(
         angle = column_text_angle,
-        size = fontsize_col, hjust = 1
+        size = fontsize_col, 
+        hjust = 1
       ),
       axis.text.y = element_text(
         angle = row_text_angle,
-        size = fontsize_row, hjust = 1
-      )
+        size = fontsize_row, 
+        hjust = 1
+      ),
+      axis.title = element_blank()
     )
 
   if (type == "scatter") {
@@ -183,7 +186,9 @@ ggplot_heatmap <- function(xx,
     p <- p + geom_vline(xintercept = c(0:ncol(xx)) + 0.5, color = grid_color) # , size = grid_size # not implemented since it doesn't work with plotly
   }
 
-  if (row_dend_left) p <- p + scale_y_discrete(position = "right") # possible as of ggplot 2.1.0 !
+  if (row_dend_left) {
+    p <- p + scale_y_discrete(position = "right") # possible as of ggplot 2.1.0 !
+  }
 
   p
 }
@@ -236,7 +241,8 @@ plotly_heatmap <- function(x,
                            colorbar_xpos = 1.1, 
                            colorbar_ypos = 1, 
                            colorbar_len = 0.3,
-                           custom_hovertext = NULL) {
+                           custom_hovertext = NULL,
+                           showticklabels = c(TRUE, TRUE)) {
 
   if (is.function(colors)) colors <- colors(256)
 
@@ -277,7 +283,7 @@ plotly_heatmap <- function(x,
         tickvals = 1:ncol(x), ticktext = colnames(x),
         linecolor = "#ffffff",
         range = c(0.5, ncol(x) + 0.5),
-        showticklabels = TRUE
+        showticklabels = showticklabels[[1]]
       ),
       yaxis = list(
         tickfont = list(size = fontsize_row),
@@ -285,7 +291,7 @@ plotly_heatmap <- function(x,
         tickvals = 1:nrow(x), ticktext = rownames(x),
         linecolor = "#ffffff",
         range = c(0.5, nrow(x) + 0.5),
-        showticklabels = TRUE
+        showticklabels = showticklabels[[2]]
       )
     )
   p <- plotly::colorbar(
@@ -403,12 +409,13 @@ plotly_dend <- function(dend,
 #'
 #' @return A ggplot geom_tile object
 #'
-ggplot_side_color_plot <- function(df, palette = NULL,
+ggplot_side_color_plot <- function(df, 
+                                   palette = NULL,
                                    scale_title = paste(type, "side colors"), 
                                    type = c("column", "row"),
                                    text_angle = if (type == "column") 0 else 90, 
                                    is_colors = FALSE, 
-                                   fontsize,
+                                   fontsize = 10,
                                    label_name = NULL) {
 
   type <- match.arg(type)
@@ -445,12 +452,11 @@ ggplot_side_color_plot <- function(df, palette = NULL,
 
   ## Don't need this hack any more?
   # if(original_dim[2] > 1) {
-  text_element <- element_text(angle = text_angle)
+  text_element <- element_text(angle = text_angle, hjust = 1, size = fontsize)
   # } else text_element <- element_blank()
 
   if (type == "column") {
     mapping <- aes_string(x = paste_aes(id_var), y = "variable", fill = "value")
-
     specific_theme <- theme(
       axis.text.x = element_blank(),
       axis.text.y = text_element
@@ -459,7 +465,8 @@ ggplot_side_color_plot <- function(df, palette = NULL,
     mapping <- aes_string(x = "variable", y = paste_aes(id_var), fill = "value")
     specific_theme <- theme(
       axis.text.x = text_element,
-      axis.text.y = element_blank()
+      axis.text.y = element_blank(),
+      legend.position = "top"
     )
   }
   theme <- list(common_theme, specific_theme)
@@ -478,7 +485,7 @@ ggplot_side_color_plot <- function(df, palette = NULL,
     xlab("") +
     ylab("") +
     scale_fill_manual(
-      name = NULL,
+      name = scale_title,
       breaks = levels(df[["value"]]),
       values = palette[levels(df[["value"]])]
     ) +
@@ -590,56 +597,6 @@ parse_plotly_color <- function(color) {
 }
 
 
-
-# # Create a plotly colorscale from a list of colors in any format.
-# # Probably not needed currently
-# make_colorscale <- function(colors) {
-#     seq <- seq(0, 1, by = 1 / length(colors))
-#     scale <- list(
-#         sapply(seq_along(colors),
-#           function(i) {
-#             if (i == 1) {
-#                 0
-#             } else if (i == length(colors)) {
-#                 1
-#             } else {
-#                 seq[i]
-#             }
-#           }
-#         ),
-#         col2plotlyrgb(colors)
-#     )
-#     scale
-# }
-
-# #' @title Color to RGB Text
-# #' @description
-# #' Plotly takes colors in this format "rgb(255, 0, 0)"
-# #'
-# #' @param col vector of any of the three kinds of R color specifications,
-# #' i.e., either a color name (as listed by colors()),
-# #' a hexadecimal string of the form "#rrggbb" or "#rrggbbaa" (see rgb),
-# #' or a positive integer i meaning palette()[i].
-# #'
-# #' @return
-# #' A character of the form "rgb(value1,value1,value3)"
-# #'
-# #' @seealso \link{col2rgb}
-# #' @examples
-# #' \dontrun{
-# #' col2rgb("peachpuff")
-# #' col2plotlyrgb("peachpuff")
-# #' }
-# col2plotlyrgb <- function(col) {
-#     rgb <- grDevices::col2rgb(col)
-#     paste0(
-#       "rgb(",
-#       rgb["red", ], ",",
-#       rgb["green", ], ",",
-#       rgb["blue", ], ")"
-#     )
-# }
-
 ## Helper function to generate "normal" colors for dendrograms
 ## ie black if one k or rainbow_hcl otherwise
 k_colors <- function(k) {
@@ -649,8 +606,6 @@ k_colors <- function(k) {
     "black"
   }
 }
-
-
 
 
 # Create a plotly colorscale from a list of colors in any format.
@@ -667,7 +622,8 @@ plotly_side_color_plot <- function(df,
                                    type = c("column", "row"),
                                    text_angle = if (type == "column") 0 else 90, 
                                    is_colors = FALSE,
-                                   label_name = NULL, 
+                                   label_name = NULL,
+                                   colorbar_len = 0.3,
                                    fontsize = 10) {
 
   type <- match.arg(type)
@@ -754,7 +710,7 @@ plotly_side_color_plot <- function(df,
         length.out = length(levels)
       ),
       ticktext = levels,
-      len = 0.2
+      len = colorbar_len
     )
   )
   if (type == "row") {
@@ -886,3 +842,4 @@ col2hex <- function(col) {
         green = colMat[2, ] / 255, 
         blue = colMat[3, ] / 255)
 }
+

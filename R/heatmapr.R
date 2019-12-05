@@ -78,7 +78,13 @@ fix_not_all_unique <- function(x, ...) {
 #' @param distfun_col distfun for row dendrogram only.
 #' @param hclustfun_col hclustfun for col dendrogram only.
 #'
-#' @param dendrogram character string indicating whether to draw 'none', 'row', 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv (or Colv) is FALSE or NULL and dendrogram is 'both', then a warning is issued and Rowv (or Colv) arguments are honoured.
+#' @param dendrogram character string indicating whether to compute 'none',
+#' 'row', 'column' or 'both' dendrograms. Defaults to 'both'. However, if Rowv 
+#' (or Colv) is FALSE or NULL and dendrogram is 'both', then a warning is issued
+#' and Rowv (or Colv) arguments are honoured.
+#' @param show_dendrogram Logical vector of length controlling whether the row 
+#' and column dendrograms are displayed. If a logical scalar is 
+#' provided, it is repeated to become a logical vector of length two.
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the row and column dendrograms. The default uses stats{reorder.dendrogram}
 #'
 #' @param k_row an integer scalar with the desired number of groups by which to color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
@@ -153,6 +159,7 @@ heatmapr <- function(x,
                      hclustfun_col,
 
                      dendrogram = c("both", "row", "column", "none"),
+                     show_dendrogram = c(TRUE, TRUE),
                      reorderfun = function(d, w) reorder(d, w),
 
                      k_row = 1,
@@ -203,12 +210,22 @@ heatmapr <- function(x,
     }
   }
   if (!is.null(hclust_method)) {
-    hclustfun_old <- hclustfun
-    hclustfun <- function(x) {
-      hclustfun_old(x, method = hclust_method)
+    if (is.na(hclust_method)) {
+      hclustfun <- find_dend
+    } else {
+      hclustfun_old <- hclustfun
+      hclustfun <- function(x) {
+        hclustfun_old(x, method = hclust_method)
+      }
     }
-  }
+  } 
 
+  if (!(is.logical(show_dendrogram) & length(show_dendrogram) %in% c(1, 2))) {
+    stop("show_dendrogram must be a logical vector of length 1 or 2")
+  }
+  if (length(show_dendrogram) == 1) {
+    show_dendrogram <- rep(show_dendrogram, 2)
+  }
 
   if (missing(distfun_row)) distfun_row <- distfun
   if (missing(hclustfun_row)) hclustfun_row <- hclustfun
@@ -290,24 +307,7 @@ heatmapr <- function(x,
   }
 
   if (isTRUE(Rowv)) {
-    Rowv <- switch(seriate,
-      "mean" = rowMeans(x, na.rm = na.rm),
-      "none" = 1:nrow(x),
-      "OLO" = {
-        dist_x <- distfun_row(x) # dist is on the rows by default
-        hc_x <- hclustfun_row(dist_x)
-        dend_x <- as.dendrogram(hc_x)
-        dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "OLO")
-        dend_x2
-      },
-      "GW" = {
-        dist_x <- distfun_row(x) # dist is on the rows by default
-        hc_x <- hclustfun_row(dist_x)
-        dend_x <- as.dendrogram(hc_x)
-        dend_x2 <- seriate_dendrogram(dend_x, dist_x, method = "GW")
-        dend_x2
-      }
-    )
+    Rowv <- create_dend(x, seriate, distfun_row, hclustfun_row, na.rm)
   }
   if (is.numeric(Rowv)) {
     Rowv <- reorderfun(as.dendrogram(hclustfun_row(distfun_row(x))), Rowv)
@@ -339,26 +339,7 @@ heatmapr <- function(x,
     Colv <- Rowv
   }
   if (isTRUE(Colv)) {
-    Colv <- switch(seriate,
-      "mean" = colMeans(x, na.rm = na.rm),
-      "none" = 1:ncol(x),
-      "OLO" = {
-        dist_x <- distfun_col(t(x)) # dist is on the rows by default
-        hc_x <- hclustfun_col(dist_x)
-        o <- seriate(dist_x, method = "OLO", control = list(hclust = hc_x))
-        dend_x <- as.dendrogram(hc_x)
-        dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
-        dend_x2
-      },
-      "GW" = {
-        dist_x <- distfun_col(t(x)) # dist is on the rows by default
-        hc_x <- hclustfun_col(dist_x)
-        o <- seriate(dist_x, method = "GW", control = list(hclust = hc_x))
-        dend_x <- as.dendrogram(hc_x)
-        dend_x2 <- rotate(dend_x, order = rev(labels(dist_x)[get_order(o)]))
-        dend_x2
-      }
-    )
+    Colv <- create_dend(t(x), seriate, distfun_row, hclustfun_row, na.rm)
   }
   if (is.numeric(Colv)) {
     Colv <- reorderfun(as.dendrogram(hclustfun_col(distfun_col(t(x)))), rev(Colv))
@@ -459,8 +440,8 @@ heatmapr <- function(x,
     }
   }
 
-  rowDend <- if (is.dendrogram(Rowv)) Rowv else NULL
-  colDend <- if (is.dendrogram(Colv)) Colv else NULL
+  rowDend <- if (is.dendrogram(Rowv) & show_dendrogram[[1]]) Rowv else NULL
+  colDend <- if (is.dendrogram(Colv) & show_dendrogram[[2]]) Colv else NULL
 
 
   ## cellnote
@@ -531,7 +512,7 @@ heatmapr <- function(x,
 
   heatmapr <- list(
     rows = rowDend, cols = colDend, matrix = mtx,
-    theme = theme, options = options, cellnote = cellnote
+    theme = theme, options = options
   )
 
   if (!missing(row_side_colors)) heatmapr[["row_side_colors"]] <- row_side_colors
@@ -552,4 +533,26 @@ heatmapr <- function(x,
 #' @return logical - is the object of class heatmapr.
 is.heatmapr <- function(x) {
   inherits(x, "heatmapr")
+}
+
+
+create_dend <- function(x, seriate, distfun, hclustfun, na.rm) {
+  switch(seriate,
+    "mean" = rowMeans(x, na.rm = na.rm),
+    "none" = 1:nrow(x),
+    "OLO" = {
+      dist <- distfun(x)
+      hc <- hclustfun(dist)
+      dend <- as.dendrogram(hc)
+      dend <- seriate_dendrogram(dend, dist, method = "OLO")
+      dend
+    },
+    "GW" = {
+      dist <- distfun(x)
+      hc <- hclustfun(dist)
+      dend <- as.dendrogram(hc)
+      dend <- seriate_dendrogram(dend, dist, method = "GW")
+      dend
+    }
+  )
 }

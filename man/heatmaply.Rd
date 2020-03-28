@@ -71,6 +71,7 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   seriate = c("OLO", "mean", "none", "GW"),
   heatmap_layers = NULL,
   side_color_layers = NULL,
+  dendrogram_layers = NULL,
   branches_lwd = 0.6,
   file,
   width = NULL,
@@ -85,6 +86,7 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   subplot_widths = NULL,
   subplot_heights = NULL,
   colorbar_len = 0.3,
+  colorbar_thickness = 30,
   colorbar_xanchor = if (row_dend_left) "right" else "left",
   colorbar_yanchor = "bottom",
   colorbar_xpos = if (row_dend_left) -0.1 else 1.1,
@@ -142,6 +144,7 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   RowSideColors,
   heatmap_layers = NULL,
   side_color_layers = NULL,
+  dendrogram_layers = NULL,
   branches_lwd = 0.6,
   label_names = c("row", "column", "value"),
   fontsize_row = 10,
@@ -153,6 +156,7 @@ heatmaply_cor(x, limits = c(-1, 1), colors = cool_warm, ...)
   colorbar_xpos = if (row_dend_left) -0.1 else 1.1,
   colorbar_ypos = 0,
   colorbar_len = 0.3,
+  colorbar_thickness = 30,
   showticklabels = c(TRUE, TRUE),
   dynamicTicks = FALSE,
   node_type = c("scatter", "heatmap"),
@@ -367,11 +371,14 @@ the matrix. This is the default used by \link[gplots]{heatmap.2}),
 "GW" (Gruvaeus and Wainer heuristic to optimize the Hamiltonian path length
 that is restricted by the dendrogram structure)}
 
-\item{heatmap_layers}{ggplot object (eg, theme_bw()) to be added to
+\item{heatmap_layers}{ggplot object(s) (eg, list(theme_bw())) to be added to
 the heatmap before conversion to a plotly object.}
 
-\item{side_color_layers}{Layers to be added to side color plots, similar to
-heatmap_layers.}
+\item{side_color_layers}{ggplot2 objects to be added to side color plots,
+similar to heatmap_layers.}
+
+\item{dendrogram_layers}{ggplot2 objects to be added to dendrograms,
+similar to heatmap_layers and side_color_layers.}
 
 \item{branches_lwd}{numeric (default is 0.6). The width of the dendrograms' branches.
 If NULL then it is ignored. If the "lwd" is already defined in Rowv/Colv then this
@@ -412,6 +419,9 @@ plots involved.}
 
 \item{colorbar_len}{The length of the colorbar/color key relative to the total
 plot height. Only used if plot_method = "plotly"}
+
+\item{colorbar_thickness}{The thickness (width) of the colorbar/color key
+in pixels. Only used if plot_method = "plotly".}
 
 \item{colorbar_xanchor, colorbar_yanchor}{The x and y anchoring points of the
 colorbar/color legend. Can be "left", "middle" or "right" for colorbar_xanchor,

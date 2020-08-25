@@ -69,7 +69,8 @@
 #' @param hclust_method default is NULL (which results in "complete" to be used).
 #' Can accept alternative character strings indicating the
 #' method to be passed to hclustfun By default hclustfun is \link{hclust} hence
-#' this can be one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#' this can be one of "ward.D", "ward.D2", "single", "complete", "average" 
+#' (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
 #' Specifying hclust_method=NA causes heatmaply to use 
 #' \code{\link[dendextend]{find_dend}} to find the "optimal" dendrogram for
 #' the data.
@@ -106,12 +107,12 @@
 #' @param scale character indicating if the values should be centered and scaled
 #' in either the row direction or the column direction, or none. The default is
 #' "none".
-#' @param na.rm logical (default is TRUE) indicating whether NA's should be removed when scaling
-#' (i.e.: when using rowMeans/colMeans). Generally it should always be kept as TRUE, and is included
-#' here mainly to stay backward compatible with gplots::heatmap.2.
-#' This argument does not effect the presence of NA values in the matrix itself.
-#' For removing rows/columns with NAs you should pre-process your matrix using na.omit
-#' (or some form of imputation).
+#' @param na.rm logical (default is TRUE) indicating whether NA's should be 
+#' removed when scaling (i.e.: when using rowMeans/colMeans). Generally it 
+#' should always be kept as TRUE, and is included here mainly to stay backward 
+#' compatible with gplots::heatmap.2. This argument does not effect the presence
+#' of NA values in the matrix itself. For removing rows/columns with NAs you 
+#' should pre-process your matrix using na.omit (or some form of imputation).
 #'
 #' @param row_dend_left logical (default is FALSE). Should the row dendrogram be
 #' plotted on the left side of the heatmap. If false then it will be plotted on
@@ -166,8 +167,6 @@
 #'
 #' @param row_side_colors,col_side_colors data.frame of factors to produce
 #'    row/column side colors in the style of heatmap.2/heatmap.3.
-#'    col_side_colors should be "wide", ie be the same dimensions
-#'    as the column side colors it will produce.
 #'    When a data.frame is provided, the column names are used as the label names for each of the newly added row_side_colors.
 #'    When a vector is provided it is coerced into a data.frame and the name of the side color will be just row_side_colors.
 #'
@@ -663,7 +662,6 @@ heatmaply.default <- function(x,
     }
     x <- x[, ss_c_numeric]
   }
-
   if (!is.null(labRow)) {
     if (all(is.na(labRow))) {
       showticklabels[[2]] <- FALSE
@@ -677,6 +675,12 @@ heatmaply.default <- function(x,
     }
   } else {
     labCol <- colnames(x)
+  }
+  if (!is.logical(showticklabels)) {
+    stop("showticklabels must be a logical vector of length 2 or 1")
+  }
+  if (length(showticklabels) == 1) {
+    showticklabels <- rep(showticklabels, 2)
   }
 
   # help dendrogram work again:
@@ -829,8 +833,8 @@ heatmaply.heatmapr <- function(x,
                                col_side_colors = x[["col_side_colors"]],
                                col_side_palette = NULL,
                                plot_method = c("ggplot", "plotly"),
-                               ColSideColors,
-                               RowSideColors,
+                               ColSideColors = NULL,
+                               RowSideColors = NULL,
                                heatmap_layers = NULL,
                                side_color_layers = NULL,
                                dendrogram_layers = NULL,
@@ -996,7 +1000,8 @@ heatmaply.heatmapr <- function(x,
       point_size_mat = point_size_mat,
       point_size_name = point_size_name,
       label_format_fun = label_format_fun,
-      custom_hovertext = custom_hovertext
+      custom_hovertext = custom_hovertext,
+      showticklabels = showticklabels
     )
   } else if (plot_method == "plotly") {
     p <- plotly_heatmap(
@@ -1009,6 +1014,8 @@ heatmaply.heatmapr <- function(x,
       fontsize_row = fontsize_row, fontsize_col = fontsize_col,
       colorbar_yanchor = colorbar_yanchor, colorbar_xanchor = colorbar_xanchor,
       colorbar_xpos = colorbar_xpos, colorbar_ypos = colorbar_ypos,
+      point_size_mat = point_size_mat,
+      point_size_name = point_size_name,
       colorbar_len = colorbar_len,
       colorbar_thickness = colorbar_thickness,
       custom_hovertext = custom_hovertext
@@ -1122,14 +1129,12 @@ heatmaply.heatmapr <- function(x,
     if (cellnote_color == "auto") {
       cellnote_color <- predict_colors(p, plot_method = plot_method)
     }
-
     df <- as.data.frame(x[["matrix"]][["cellnote"]])
     df[["_row"]] <- seq_len(nrow(df))
     mdf <- reshape2::melt(df, id.vars = "_row")
     ## TODO: Enforce same dimnames to ensure it's not scrambled?
     # mdf$variable <- factor(mdf$variable, levels = p$x$layout$xaxis$ticktext)
-    mdf$variable <- as.factor(mdf$variable)
-    mdf$variable <- as.numeric(mdf$variable)
+    mdf$variable <- as.numeric(as.factor(mdf$variable))
     mdf$value <- factor(mdf$value)
     p <- p %>% add_trace(
       data = mdf,
@@ -1206,8 +1211,6 @@ heatmaply.heatmapr <- function(x,
 
 
   if (!all(showticklabels)) {
-    if (!is.logical(showticklabels)) stop("showticklabels must be a logical vector of length 2 or 1")
-    if (length(showticklabels) == 1) showticklabels <- rep(showticklabels, 2)
     if (!showticklabels[[1]]) {
       p <- p %>%
         layout(xaxis = list(
@@ -1285,7 +1288,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
                                           titleX = TRUE, titleY = TRUE,
                                           widths=NULL, heights=NULL,
                                           plot_method,
-                                          showticklabels=c(TRUE, TRUE)) {
+                                          showticklabels = c(TRUE, TRUE)) {
   widths <- widths %||% default_dims(px, pr)
   if (row_dend_left) {
     widths <- rev(widths)

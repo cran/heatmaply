@@ -130,7 +130,7 @@ fix_not_all_unique <- function(x, ...) {
 #'
 #' @export
 #' @source
-#' The interface was designed based on \link{heatmap}, \link[gplots]{heatmap.2}, and \link[d3heatmap]{d3heatmap}.
+#' The interface was designed based on \link{heatmap}, \link[gplots]{heatmap.2}, and (the also d3heatmap).
 #'
 #' @seealso
 #' \link{heatmap}, \link[gplots]{heatmap.2}
@@ -339,7 +339,7 @@ heatmapr <- function(x,
     Colv <- Rowv
   }
   if (isTRUE(Colv)) {
-    Colv <- create_dend(t(x), seriate, distfun_row, hclustfun_row, na.rm)
+    Colv <- create_dend(t(x), seriate, distfun_col, hclustfun_col, na.rm)
   }
   if (is.numeric(Colv)) {
     Colv <- reorderfun(as.dendrogram(hclustfun_col(distfun_col(t(x)))), rev(Colv))

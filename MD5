@@ -1,12 +1,12 @@
 25037db50b0a393888ad12b9ebce1f47 *ChangeLog
-00bd65d4eeb0ec9b932b7b1854d704a5 *DESCRIPTION
-06d75b300e8e278f9521a4d47f401329 *NAMESPACE
-1baaa7ae2325247a9ab6b44c44b4c4b3 *NEWS
+b7b4553820d2ff4a914432a24ac6373b *DESCRIPTION
+c10285dc9fc0c9f432b1d2a75319312f *NAMESPACE
+73c488a575178406d3339a15601f5fa4 *NEWS
 9e141e74a3922d80f8f256f894f764ee *NEWS.md
 a5c5d591d686f3de6706d0dc31195de6 *R/RColorBrewer.R
 8db92fb11a239660b6db12ba1f90ed35 *R/distfuns.R
 d986fde44fac181957426749b263b5ef *R/ggheatmap.R
-7499cbe534d4a3151d71d49577010cac *R/heatmaply.R
+44345b34688b0a48bfdbda3d32b099e4 *R/heatmaply.R
 3570a25c24dd38c04e95b62158932f9f *R/heatmapr.R
 82b93bb2e634980e39b060e388e48d0a *R/is.na10.R
 04fd35e543dee6f72698fec8cf57d010 *R/percentize.R
@@ -15,9 +15,9 @@ b107a34971e3604bbaed9d053fed795d *R/plots.R
 24563744c4ad55a651b3f571a1b4549e *README.md
 e30320aab3cd76b23d095ac293a1167c *build/vignette.rds
 61e949dc2acafe0b5b098c24f24748f6 *inst/CITATION
-c5bbfd6827fea0a5db734434716aa46c *inst/doc/heatmaply.R
-e0be401ffcb26fc7f3014a62806373ce *inst/doc/heatmaply.Rmd
-83f5a1e90e8d3481771407797a386947 *inst/doc/heatmaply.html
+2a7ee32b9f5008bec26f649af7ecdfd8 *inst/doc/heatmaply.R
+3786188165809d81e5d9c98a4bbfb109 *inst/doc/heatmaply.Rmd
+f3657edaec2c8f7925b0ac228d3586f8 *inst/doc/heatmaply.html
 171b361d244a08b52d4d86d8d98f54f7 *man/RColorBrewer_colors.Rd
 d1333b879323eb0fe77c9bf0f9bb952b *man/ggheatmap.Rd
 cadaf47f8b0762f1bd69a259981919c0 *man/ggplot_side_color_plot.Rd
@@ -36,4 +36,4 @@ a5009ff9fd55b589f7ccba577a12b433 *tests/testthat/test_heatmaply_misc.R
 3ca7de540b14b471f5ae8acd1e2e2573 *tests/testthat/test_heatmapr.R
 75756efe9873de8ade4b2ae7adb2caa8 *tests/testthat/test_misc.R
 7f982f1e54c23e2d7ca470055dece1f4 *tests/testthat/test_plots.R
-e0be401ffcb26fc7f3014a62806373ce *vignettes/heatmaply.Rmd
+3786188165809d81e5d9c98a4bbfb109 *vignettes/heatmaply.Rmd

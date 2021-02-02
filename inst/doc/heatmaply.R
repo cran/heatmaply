@@ -2,6 +2,8 @@
 library("heatmaply")
 library("knitr")
 knitr::opts_chunk$set(
+  warning=FALSE, # because of a bug in plotly: https://github.com/ropensci/plotly/issues/1670
+  # see also: https://github.com/talgalili/heatmaply/issues/226
   # cache = TRUE,
   dpi = 60,
   comment = "#>",
@@ -146,12 +148,12 @@ heatmaply(
   seriate = "OLO"
 )
 
-## -----------------------------------------------------------------------------
-# Similar to OLO but less optimal (since it is a heuristic)
-heatmaply(
-  percentize(mtcars)[1:10, ],
-  seriate = "GW"
-)
+## ---- eval = F----------------------------------------------------------------
+#  # Similar to OLO but less optimal (since it is a heuristic)
+#  heatmaply(
+#    percentize(mtcars)[1:10, ],
+#    seriate = "GW"
+#  )
 
 ## ---- eval = F----------------------------------------------------------------
 #  # the default by gplots::heatmaply.2

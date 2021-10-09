@@ -1,43 +1,52 @@
 #' ggplot heatmap equivalent to heatmaply
-#' 
-#' This function produces a ggplot analogue of heatmaply figures 
+#'
+#' This function produces a ggplot analogue of heatmaply figures
 #' using \link[egg]{ggarrange}. This function may not always support the same
 #' set of features as , and exporting the heatmaply object with, for example,
 #' \link[plotly]{orca} or \code{heatmaply(mtcars, file = "foo.png")}.
-#' 
+#'
 #' @param ... Passed to \link{heatmaply}
 #' @param widths,heights Relative widths and heights of plots.
-#' @param row_dend_left Logical argument controlling whether the row 
+#' @param row_dend_left Logical argument controlling whether the row
 #'  dendrogram is placed on the left of the plot.
+#' @param hide_colorbar Logical argument controlling whether the color bar (i.e.:
+#'   the legend) is hidden.
 #' @examples
 #' ggheatmap(mtcars)
 #' @export
-ggheatmap <- function(..., widths = NULL, heights = NULL, row_dend_left = FALSE) {
+ggheatmap <- function(..., widths = NULL, heights = NULL,
+                      row_dend_left = FALSE, hide_colorbar = FALSE) {
   plots <- heatmaply(
-    ..., 
-    row_dend_left = row_dend_left, 
+    ...,
+    row_dend_left = row_dend_left,
+    hide_colorbar = hide_colorbar,
     return_ppxpy = TRUE,
     plot_method = "ggplot"
   )
   arrange_plots(
-    plots, 
+    plots,
     widths = widths,
     heights = heights,
-    row_dend_left = row_dend_left
+    row_dend_left = row_dend_left,
+    hide_colorbar = hide_colorbar
   )
 }
 
 
 ## TODO: duplication with heatmap_subplot_from_ggplotly
 arrange_plots <- function(
-    plots, 
-    widths = NULL, 
-    heights = NULL, 
-    row_dend_left = FALSE) {
+    plots,
+    widths = NULL,
+    heights = NULL,
+    row_dend_left = FALSE,
+    hide_colorbar = FALSE) {
 
   plots <- plots[!sapply(plots, is.null)]
   if (!row_dend_left) {
     plots$p <- plots$p + theme(legend.position = "left")
+  }
+  if (hide_colorbar) {
+    plots$p <- plots$p + theme(legend.position = "none")
   }
   plots <- lapply(plots, function(x) x + theme(plot.margin = unit(c(0, 0, 0, 0), "npc")))
 
@@ -67,10 +76,14 @@ arrange_plots <- function(
   ind_remove_row <- rep(ind_null_row, length.out = length(plotlist))
   plotlist <- plotlist[!(ind_remove_row | ind_remove_col)]
 
+  widths <- widths %||% default_dims(plots$px, plots$pr)
+  if (row_dend_left) {
+    widths <- rev(widths)
+  }
   egg::ggarrange(
     plots = plotlist,
     ncol = ncols,
-    widths = widths %||% default_dims(plots$px, plots$pr),
+    widths = widths,
     heights = heights %||% rev(default_dims(plots$py, plots$pc))
   )
 }

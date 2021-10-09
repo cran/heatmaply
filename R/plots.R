@@ -265,9 +265,9 @@ plotly_heatmap <- function(x,
       seq_along(text_mat),
       function(i) {
         paste0(
-          label_names[3], ": ", x[, i], "<br>",
+          label_names[1], ": ", rownames(x), "<br>",
           label_names[2], ": ", colnames(x)[i], "<br>",
-          label_names[1], ": ", rownames(x)
+          label_names[3], ": ", x[, i]
         )
       }
     )
@@ -285,18 +285,19 @@ plotly_heatmap <- function(x,
       colors = colors,
       hoverinfo = "text",
       zmin = limits[1], zmax = limits[2]
-    )    
+    )
   } else {
-    melt <- function(x, cn, rn) {
+
+    melt <- function(x, cn=colnames(x), rn=rownames(x)) {
       xdf <- reshape2::melt(x)
-      xdf$Var1 <- factor(xdf$Var1, levels = colnames(x))
-      xdf$Var2 <- factor(xdf$Var2, levels = rownames(x))
+      xdf$Var1 <- factor(xdf$Var1, levels = rn)
+      xdf$Var2 <- factor(xdf$Var2, levels = cn)
       xdf
     }
     xdf <- melt(x)
     tdf <- melt(text_mat)
     pdf <- melt(point_size_mat)
-    
+
     p <- plot_ly(
       x = as.numeric(xdf$Var1),
       y = as.numeric(xdf$Var2),
@@ -681,7 +682,8 @@ plotly_side_color_plot <- function(df,
                                    is_colors = FALSE,
                                    label_name = NULL,
                                    colorbar_len = 0.3,
-                                   fontsize = 10) {
+                                   fontsize = 10,
+                                   show_legend = TRUE) {
 
   type <- match.arg(type)
 
@@ -693,7 +695,6 @@ plotly_side_color_plot <- function(df,
   #   data <- t(data)
   # }
   data <- as.data.frame(data, stringsAsFactors = TRUE)
-  data[] <- lapply(data, factor)
   data_vals <- unlist(data)
   levels <- levels(data_vals)
   levels <- levels[!is.na(levels)]
@@ -716,7 +717,10 @@ plotly_side_color_plot <- function(df,
   levs2nums <- setNames(seq_along(levels), levels)
 
   df_nums <- data
-  df_nums[] <- lapply(data, function(col) as.numeric(levs2nums[as.character(col)]))
+  df_nums[] <- lapply(
+    data,
+    function(col) as.numeric(levs2nums[as.character(col)])
+  )
   df_nums <- as.matrix(df_nums)
   if (type == "column") {
     df_nums <- t(df_nums)
@@ -724,7 +728,9 @@ plotly_side_color_plot <- function(df,
   if (ncol(df) == 1) {
     key_title <- colnames(df)
   } else {
-    key_title <- paste(gsub("^(\\w)", "\\U\\1", type, perl = TRUE), "annotation")
+    key_title <- paste(
+      gsub("^(\\w)", "\\U\\1", type, perl = TRUE), "annotation"
+    )
   }
 
   text_mat <- data

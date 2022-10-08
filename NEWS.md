@@ -1,4 +1,20 @@
-heatmaply 1.3.0 (2021-10-08)
+heatmaply 1.4.0 (2022-10-08)
+===============
+## OTHER NOTES
+- added github actions
+
+## BUGFIX
+- Add label_format_fun to plotly heatmap mode
+- hoverinfo now works correctly when cellnote is displayed; see issue #76.
+For example, run:
+```
+library("heatmaply")
+heatmaply(mtcars, draw_cellnote = TRUE)
+```
+You can see that now the hover info is properly displayed.
+
+
+heatmaply 1.3.0 (2021-10-09)
 ===============
 ## NEW FEATURE
 - ggheatmap now accepts `hide_colorbar` argument. Also, when `row_dend_left`
@@ -13,6 +29,7 @@ PR #273)
 - Changed order of hovertext when plot_method="plotly" to match ggplot equivalent
 - update startup message to include stackoverflow.
 - add github actions (GHA)
+- minor fixes to doc so to release to CRAN.
 
 heatmaply 1.2.1 (2021-02-02)
 ===============
@@ -506,59 +523,3 @@ heatmaply 0.1.0 (2016-05-14)
 ==============================
 
 * First (very rough) version. It has a minimal working example, as well as MANY things to fix/tweak/adjust.
-
-
-
-
-TODO:
-==============================
-* remove unneeded code from d3heatmap
-* add many options for controlling the heatmap "as it should be"
-* implement all relevant options streight to heatmaply.
-* Expose widths and heights from heatmap_subplot_from_ggplotly to heatmaply
-* write example for using seriation+dendextend for heatmaps.
-* Show the following example for using seriation:
-
-
-
-require(seriation)
-require(dendextend)
-# "GW", "OLO"
-d <- dist(USArrests[1:15,])
-dend <- as.dendrogram(hclust(d, method = "ave"))
-par(mfrow = c(1,2))
-plot(dend, main = "default")
-# seriate(cophenetic(dend), method = "OLO", control = list(hclust = as.hclust(dend)))
-# the downside in using cophenetic is that seriate has to go through running hclust all over again
-# but we'll just have to accept it...
-o <- seriate(d, method = "GW", control = list(hclust = as.hclust(dend)) )
-get_order(o)
-labels(cophenetic(dend))[get_order(o)]
-d2 <- rotate(dend, order = rev(labels(d)[get_order(o)]))
-plot(d2, main = "GW")
-
-o <- seriate(d, method = "OLO", control = list(hclust = as.hclust(dend)) )
-d3 <- rotate(dend, order = rev(labels(d)[get_order(o)]))
-
-require(heatmaply)
-heatmaply(USArrests[1:15,], Rowv = d2)
-heatmaply(USArrests[1:15,], Rowv = d3)
-heatmaply(USArrests[1:15,], Rowv = dend)
-
-hmap(USArrests[1:15,])
-
-
-
-identical(seriate(d, method = "OLO"),
-		seriate(d, method = "OLO", control = list(hclust = as.hclust(dend)) ))
-get_order(seriate(d, method = "OLO"))
-get_order(seriate(d, method = "OLO", control = list(hclust = hclust(d, method = "sing")) )) # this works :)
-
-
-
-
-
-
-
-
-

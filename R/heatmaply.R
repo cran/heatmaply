@@ -212,9 +212,11 @@
 #' arguments you want based on the ones in \link[webshot]{webshot}.
 #'
 #' Another example: heatmaply(x, file = c("heatmaply_plot.html", "heatmaply_plot.png"))
-#'
-#' @param width,height The width and height of the image saved. Default is
-#' which uses 800 x 500 pixels.
+#' @param width,height The width and height of the output htmlwidget, or the
+#' output file if exporting to png/pdf/etc. Presumed to be in pixels, but
+#' if a plotly internal function decides it's in other units you may end up
+#' with a huge file! Default is 800x500 when exporting to a file, and 100% width
+#' as a htmlwidget.
 #' @param long_data Data in long format. Replaces x, so both should not be used.
 #'  Colnames must be c("name", "variable", "value"). If you do not have a names
 #'  column you can simply use a sequence of numbers from 1 to the number of "rows"
@@ -278,6 +280,7 @@
 #' length of the colorbar/color key relative to the total plot height.
 #' This argument controls the colorbar_len of the side colour plots.
 #' Only used if plot_method = "plotly".
+#' @param plotly_source See \code{source} argument in \code{\link[plotly]{plot_ly}}
 #'
 #' @export
 #' @examples
@@ -479,10 +482,6 @@ heatmaply_cor <- function(x,
 
 
 
-
-
-
-
 #' @export
 #' @rdname heatmaply
 heatmaply.default <- function(x,
@@ -574,7 +573,8 @@ heatmaply.default <- function(x,
                               custom_hovertext = NULL,
                               col = NULL,
                               dend_hoverinfo = TRUE,
-                              side_color_colorbar_len = 0.3) {
+                              side_color_colorbar_len = 0.3,
+                              plotly_source = "A") {
   if (!is.null(long_data)) {
     if (!missing(x)) {
       stop("x and long_data should not be used together")
@@ -591,6 +591,27 @@ heatmaply.default <- function(x,
 
   # this is to fix the error: "argument * matches multiple formal arguments"
   if (!is.null(col)) colors <- col
+
+
+  # informative errors for mis-specified limits
+  if (!is.null(limits)) {
+    if (!is.numeric(limits)) stop("limits must be numeric")
+    if (length(limits) != 2L) stop("limits must be of length 2 (i.e.: two dimensional)")
+
+    r <- range(as.matrix(x), na.rm = TRUE)
+    limits <- sort(limits)
+
+  
+    ## Warn for broken heatmap colors
+    if (limits[1] > r[1]) {
+      limits[1] <- r[1]
+      warning("Lower limit is not <= lowest value in x, min of limits is set to the min of the range (otherwise, colors will be broken!)")
+    }
+    if (limits[2] < r[2]) {
+      limits[2] <- r[2]
+      warning("Upper limit is not >= highest value in x, max of limits is set to the max of the range (otherwise, colors will be broken!)")
+    }
+  }
 
   if (is.null(scale_fill_gradient_fun)) {
     if (node_type == "heatmap") {
@@ -787,7 +808,10 @@ heatmaply.default <- function(x,
     point_size_name = point_size_name,
     label_format_fun = label_format_fun,
     dend_hoverinfo = dend_hoverinfo,
-    side_color_colorbar_len = side_color_colorbar_len
+    side_color_colorbar_len = side_color_colorbar_len,
+    plotly_source = plotly_source,
+    height = height,
+    width = width
   )
 
   # TODO: think more on what should be passed in "..."
@@ -864,7 +888,11 @@ heatmaply.heatmapr <- function(x,
                                label_format_fun = function(...) format(..., digits = 4),
                                custom_hovertext = x[["matrix"]][["custom_hovertext"]],
                                dend_hoverinfo = TRUE,
-                               side_color_colorbar_len = 0.3) {
+                               side_color_colorbar_len = 0.3,
+                               plotly_source = "A",
+                               height = NULL,
+                               width = NULL) {
+
   node_type <- match.arg(node_type)
   plot_method <- match.arg(plot_method)
   cellnote_textposition <- match.arg(
@@ -886,28 +914,8 @@ heatmaply.heatmapr <- function(x,
   }
 
 
-  # informative errors for mis-specified limits
-  if (!is.null(limits)) {
-    if (!is.numeric(limits)) stop("limits must be numeric")
-    if (length(limits) != 2L) stop("limits must be of length 2 (i.e.: two dimensional)")
-
-    r <- range(as.matrix(x$matrix$data), na.rm = TRUE)
-    limits <- sort(limits)
-
-    ## Warn for broken heatmap colors
-    if (limits[1] > r[1]) {
-      limits[1] <- r[1]
-      warning("Lower limit is not <= lowest value in x, min of limits is set to the min of the range (otherwise, colors will be broken!)")
-    }
-    if (limits[2] < r[2]) {
-      limits[2] <- r[2]
-      warning("Upper limit is not >= highest value in x, max of limits is set to the max of the range (otherwise, colors will be broken!)")
-    }
-  }
   if (!is.null(srtRow)) row_text_angle <- srtRow
   if (!is.null(srtCol)) column_text_angle <- srtCol
-
-
 
   # x is a heatmapr object.
   # heatmapr <- list(rows = rowDend, cols = colDend, matrix = mtx, image = imgUri,
@@ -958,7 +966,8 @@ heatmaply.heatmapr <- function(x,
     } else {
       py <- plotly_dend(cols,
         side = "col",
-        dend_hoverinfo = dend_hoverinfo
+        dend_hoverinfo = dend_hoverinfo,
+        plotly_source = plotly_source
       )
     }
   }
@@ -981,7 +990,8 @@ heatmaply.heatmapr <- function(x,
       px <- plotly_dend(rows,
         flip = row_dend_left,
         side = "row",
-        dend_hoverinfo = dend_hoverinfo
+        dend_hoverinfo = dend_hoverinfo,
+        plotly_source = plotly_source
       )
     }
   }
@@ -1025,7 +1035,10 @@ heatmaply.heatmapr <- function(x,
       colorbar_len = colorbar_len,
       colorbar_thickness = colorbar_thickness,
       custom_hovertext = custom_hovertext,
-      label_format_fun = label_format_fun
+      label_format_fun = label_format_fun,
+      height = height,
+      width = width,
+      plotly_source = plotly_source
     )
   }
 
@@ -1061,7 +1074,8 @@ heatmaply.heatmapr <- function(x,
         fontsize = fontsize_col,
         is_colors = !is.null(RowSideColors),
         colorbar_len = side_color_colorbar_len,
-        label_name = label_names[[1]]
+        label_name = label_names[[1]],
+        plotly_source = plotly_source
       )
     }
   }
@@ -1094,7 +1108,8 @@ heatmaply.heatmapr <- function(x,
         fontsize = fontsize_row,
         is_colors = !is.null(ColSideColors),
         colorbar_len = side_color_colorbar_len,
-        label_name = label_names[[2]]
+        label_name = label_names[[2]],
+        plotly_source = plotly_source
       )
     }
   }
@@ -1103,11 +1118,11 @@ heatmaply.heatmapr <- function(x,
     return(list(p = p, px = px, py = py, pr = pr, pc = pc))
   } else {
     if (!is.null(pc)) {
-      pc <- ggplotly(pc)
+      pc <- ggplotly(pc, source = plotly_source)
       pc <- layout(pc, showlegend = TRUE)
     }
     if (!is.null(pr)) {
-      pr <- ggplotly(pr)
+      pr <- ggplotly(pr, source = plotly_source)
       pr <- layout(pr, showlegend = TRUE)
     }
   }
@@ -1115,15 +1130,21 @@ heatmaply.heatmapr <- function(x,
   ## plotly:
   # turn p, px, and py to plotly objects if necessary
   if (!is.plotly(p)) {
-    p <- ggplotly(p, dynamicTicks = dynamicTicks, tooltip = "text") %>%
-      layout(showlegend = FALSE)
-    ## Currently broken, see:
-    ##  https://github.com/ropensci/plotly/issues/1701
-    # %>%
-    # colorbar(
-    #   len = colorbar_len,
-    #   thickness = colorbar_thickness
-    # )
+    p <- ggplotly(
+        p,
+        dynamicTicks = dynamicTicks,
+        tooltip = "text",
+        height = height,
+        width = width,
+        source = plotly_source) %>%
+        layout(showlegend = FALSE)
+      ## Currently broken, see:
+      ##  https://github.com/ropensci/plotly/issues/1701
+      # %>%
+      # colorbar(
+      #   len = colorbar_len,
+      #   thickness = colorbar_thickness
+      # )
   }
 
   if (draw_cellnote) {
@@ -1167,14 +1188,16 @@ heatmaply.heatmapr <- function(x,
   if (!is.null(px) && !is.plotly(px)) {
     px <- ggplotly(px,
       tooltip = if (dend_hoverinfo) "y" else "none",
-      dynamicTicks = dynamicTicks
+      dynamicTicks = dynamicTicks,
+      source = plotly_source
     ) %>%
       layout(showlegend = FALSE)
   }
   if (!is.null(py) && !is.plotly(py)) {
     py <- ggplotly(py,
       tooltip = if (dend_hoverinfo) "y" else "none",
-      dynamicTicks = dynamicTicks
+      dynamicTicks = dynamicTicks,
+      source = plotly_source
     ) %>%
       layout(showlegend = FALSE)
   }
@@ -1240,9 +1263,6 @@ heatmaply.heatmapr <- function(x,
           ticklen = 0
         ))
     }
-    # ggplotly() %>%
-    # layout(yaxis = list(tickmode='auto'),
-    #        xaxis = list(tickmode='auto'))
   }
 
   heatmap_subplot <- heatmap_subplot_from_ggplotly(
@@ -1258,7 +1278,8 @@ heatmaply.heatmapr <- function(x,
     pr = pr,
     pc = pc,
     plot_method = plot_method,
-    showticklabels = showticklabels
+    showticklabels = showticklabels,
+    empty = plotly_empty(source = plotly_source)
   )
   l <- layout(
     heatmap_subplot,
@@ -1304,7 +1325,8 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
                                           titleX = TRUE, titleY = TRUE,
                                           widths = NULL, heights = NULL,
                                           plot_method,
-                                          showticklabels = c(TRUE, TRUE)) {
+                                          showticklabels = c(TRUE, TRUE),
+                                          empty = plotly_empty(source = "A")) {
   widths <- widths %||% default_dims(px, pr)
   if (row_dend_left) {
     widths <- rev(widths)
@@ -1313,8 +1335,8 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
 
 
   # make different plots based on which dendrogram and sidecolors we have
-  row1_list <- list(py, plotly_empty(), plotly_empty())
-  row2_list <- list(pc, plotly_empty(), plotly_empty())
+  row1_list <- list(py, empty, empty)
+  row2_list <- list(pc, empty, empty)
   row3_list <- list(p, pr, px)
 
   if (row_dend_left) {

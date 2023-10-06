@@ -1,39 +1,3 @@
-
-
-# heatmaply:::ggplot_heatmap(as.matrix(mtcars))
-# heatmaply:::plotly_heatmap(as.matrix(mtcars))
-# style(plotly_heatmap(as.matrix(mtcars)), xgap = 5, ygap = 5)
-
-
-
-
-#
-# library(ggplot2)
-# library(plotly)
-# # library(heatmaply)
-# ggplot_heatmap <- heatmaply:::ggplot_heatmap
-# class_to <- function(x, new_class) {
-#   class(x) <- new_class
-#   x
-# }
-# na_mat <- function(x) {
-#   x %>% is.na %>% class_to("numeric")
-# }
-#
-# p <- heatmaply:::ggplot_heatmap(na_mat(airquality),
-#                     scale_fill_gradient_fun = scale_fill_gradientn(colors= c("white","black")) ,
-#                     grid_color = "grey", grid_size = 1)
-# plot(p)
-# ggplotly(p)
-# p <- ggplot_heatmap(mtcars,
-#                     grid_color = "white")
-# p
-#
-
-
-# heatmaply:::ggplot_heatmap(as.matrix(mtcars))
-
-
 # xx is a data matrix
 ggplot_heatmap <- function(xx,
                            row_text_angle = 0,
@@ -71,8 +35,6 @@ ggplot_heatmap <- function(xx,
   )
 
   type <- match.arg(type)
-  # heatmap
-  # xx <- x$matrix$data
 
   df <- xx
   if (!is.data.frame(df)) df <- as.data.frame(df, check.rows = FALSE)
@@ -106,9 +68,8 @@ ggplot_heatmap <- function(xx,
 
   if (type == "heatmap") {
     geom <- "geom_tile"
-    aes_args <- list(fill = paste_aes(val), text = "text")
+    aes_mapping <- aes(fill = .data[[val]], text = .data$text)
     geom_args <- list(
-      # mapping = aes_string(fill = paste_aes(val)),
       color = grid_color,
       size = grid_size
     )
@@ -120,35 +81,28 @@ ggplot_heatmap <- function(xx,
         mdf[["text"]], "<br>",
         point_size_name, ": ", label_format_fun(mdf[[4]])
       )
-      aes_args <- list(
-        color = paste_aes(val),
-        text = "text",
-        size = paste_aes(point_size_name)
+      aes_mapping <- aes(
+        color = .data[[val]],
+        text = .data$text,
+        size = .data[[point_size_name]]
       )
-
-      # geom_args[["mapping"]] <- aes_string(
-      #   color = paste_aes(val),
-      #   text = "text",
-      #   size = paste_aes(point_size_name)
-      # )
     } else {
       geom_args[["size"]] <- grid_size
-      aes_args <- list(
-        color = paste_aes(val),
-        text = "text"
+      aes_mapping <- aes(
+        color = .data[[val]],
+        text = .data$text
       )
-      # geom_args[["mapping"]] <- aes_string(color = paste_aes(val), text = "text")
     }
   }
   if (!is.null(custom_hovertext)) {
     mdf[["text"]] <- paste0(mdf[["text"]], "<br>", custom_hovertext)
   }
-  geom_args[["mapping"]] <- do.call(aes_string, aes_args)
-
+  geom_args[["mapping"]] <- aes_mapping
+  
   # TODO:
   # http://stackoverflow.com/questions/15921799/draw-lines-around-specific-areas-in-geom-tile
   # https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
-  p <- ggplot(mdf, aes_string(x = paste_aes(col), y = paste_aes(row))) +
+  p <- ggplot(mdf, aes(x = .data[[col]], y = .data[[row]])) +
     ## Using the text aes produces a warning... Not ideal!
     suppressWarnings(do.call(geom, geom_args)) +
     scale_fill_gradient_fun +
@@ -252,7 +206,10 @@ plotly_heatmap <- function(x,
                            point_size_mat = NULL,
                            point_size_name = "Point size",
                            showticklabels = c(TRUE, TRUE),
-                           label_format_fun = function(...) format(..., digits = 4)) {
+                           label_format_fun = function(...) format(..., digits = 4),
+                           height = NULL,
+                           width = NULL,
+                           plotly_source = "A") {
   if (is.function(colors)) colors <- colors(256)
 
   if (is.null(label_names)) {
@@ -299,7 +256,10 @@ plotly_heatmap <- function(x,
       showlegend = FALSE,
       colors = colors,
       hoverinfo = "text",
-      zmin = limits[1], zmax = limits[2]
+      zmin = limits[1], zmax = limits[2],
+      height = height,
+      width = width,
+      source = plotly_source
     )
   } else {
     melt <- function(x, cn = colnames(x), rn = rownames(x)) {
@@ -321,7 +281,8 @@ plotly_heatmap <- function(x,
       mode = "markers",
       showlegend = FALSE,
       colors = colors,
-      hoverinfo = "text"
+      hoverinfo = "text",
+      source = plotly_source
     )
   }
   p <- p %>%
@@ -361,7 +322,8 @@ plotly_heatmap <- function(x,
 plotly_dend <- function(dend,
                         side = c("row", "col"),
                         flip = FALSE,
-                        dend_hoverinfo = TRUE) {
+                        dend_hoverinfo = TRUE,
+                        plotly_source = "A") {
   if (is.hclust(dend)) {
     dend <- as.dendrogram(dend)
   }
@@ -437,7 +399,7 @@ plotly_dend <- function(dend,
     }
   }
 
-  p <- plot_ly(segs) %>% add_plot_lines()
+  p <- plot_ly(segs, source = plotly_source) %>% add_plot_lines()
 
   if (flip) {
     p <- layout(p, xaxis = list(autorange = "reversed"))
@@ -508,13 +470,13 @@ ggplot_side_color_plot <- function(df,
   # } else text_element <- element_blank()
 
   if (type == "column") {
-    mapping <- aes_string(x = paste_aes(id_var), y = "variable", fill = "value")
+    mapping <- aes(x = .data[[id_var]], y = .data$variable, fill = .data$value)
     specific_theme <- theme(
       axis.text.x = element_blank(),
       axis.text.y = text_element
     )
   } else {
-    mapping <- aes_string(x = "variable", y = paste_aes(id_var), fill = "value")
+    mapping <- aes(x = .data$variable, y = .data[[id_var]], fill = .data$value)
     specific_theme <- theme(
       axis.text.x = text_element,
       axis.text.y = element_blank(),
@@ -692,7 +654,8 @@ plotly_side_color_plot <- function(df,
                                    label_name = NULL,
                                    colorbar_len = 0.3,
                                    fontsize = 10,
-                                   show_legend = TRUE) {
+                                   show_legend = TRUE,
+                                   plotly_source = "A") {
   type <- match.arg(type)
 
   if (is.null(label_name)) label_name <- type
@@ -782,7 +745,8 @@ plotly_side_color_plot <- function(df,
       ),
       ticktext = levels,
       len = colorbar_len
-    )
+    ),
+    source = plotly_source
   )
   if (type == "row") {
     p <- p %>% layout(

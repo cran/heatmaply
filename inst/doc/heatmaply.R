@@ -1,4 +1,4 @@
-## ---- echo = FALSE, message = FALSE-------------------------------------------
+## ----echo = FALSE, message = FALSE--------------------------------------------
 library("heatmaply")
 library("knitr")
 knitr::opts_chunk$set(
@@ -13,10 +13,10 @@ knitr::opts_chunk$set(
 # < ! -- rmarkdown v1 -->
 
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  install.packages('heatmaply')
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  # You'll need devtools
 #  install.packages.2 <- function (pkg) if (!require(pkg)) install.packages(pkg);
 #  install.packages.2('remotes')
@@ -69,7 +69,7 @@ heatmaply_cor(
   label_names = c("x", "y", "Correlation")
 )
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  heatmaply(
 #    mtcars,
 #    xlab = "Features",
@@ -78,7 +78,7 @@ heatmaply_cor(
 #    main = "Data transformation using 'scale'"
 #  )
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  heatmaply(
 #    normalize(mtcars),
 #    xlab = "Features",
@@ -115,7 +115,7 @@ heatmaply_na(
 # 
 
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  heatmaply_cor(
 #    cor(mtcars),
 #    k_col = 2,
@@ -123,7 +123,7 @@ heatmaply_na(
 #  )
 #  
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  heatmaply(
 #    percentize(mtcars),
 #    colors = heat.colors(100)
@@ -148,21 +148,21 @@ heatmaply(
   seriate = "OLO"
 )
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  # Similar to OLO but less optimal (since it is a heuristic)
 #  heatmaply(
 #    percentize(mtcars)[1:10, ],
 #    seriate = "GW"
 #  )
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  # the default by gplots::heatmaply.2
 #  heatmaply(
 #    percentize(mtcars)[1:10, ],
 #    seriate = "mean"
 #  )
 
-## ---- eval = F----------------------------------------------------------------
+## ----eval = F-----------------------------------------------------------------
 #  # the default output from hclust
 #  heatmaply(
 #    percentize(mtcars)[1:10, ],
@@ -211,7 +211,7 @@ gplots::heatmap.2(
   key = FALSE
 )
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  heatmaply(
 #    x,
 #    seriate = "mean"
@@ -241,7 +241,7 @@ heatmap.2(
 )
 
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  heatmaply(
 #    x,
 #    seriate = "mean",
@@ -281,12 +281,12 @@ ggheatmap(
   row_side_colors = mtcars[, c("cyl", "gear")]
 )
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  dir.create("folder")
 #  heatmaply(mtcars, file = "folder/heatmaply_plot.html")
 #  browseURL("folder/heatmaply_plot.html")
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  dir.create("folder")
 #  # Before the first time using this code you may need to first run:
 #  # webshot::install_phantomjs() or to install
@@ -294,12 +294,12 @@ ggheatmap(
 #  heatmaply(mtcars, file = "folder/heatmaply_plot.png")
 #  browseURL("folder/heatmaply_plot.png")
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  # This saves the file, but does not plot it in the RStudio viewer
 #  tmp <- heatmaply(mtcars, file = "folder/heatmaply_plot.png")
 #  rm(tmp)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  
 #  library("microbenchmark")
 #  
@@ -322,6 +322,6 @@ ggheatmap(
 #  
 #  
 
-## ---- cache = FALSE-----------------------------------------------------------
+## ----cache = FALSE------------------------------------------------------------
 sessionInfo()
 

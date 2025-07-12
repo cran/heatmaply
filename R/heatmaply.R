@@ -89,7 +89,7 @@
 #' the row and/or column dendrograms are displayed. If a logical scalar is
 #' provided, it is repeated to become a logical vector of length two.
 #' @param reorderfun function(d, w) of dendrogram and weights for reordering the
-#' row and column dendrograms. The default uses stats{reorder.dendrogram}
+#' row and column dendrograms. The default uses \link[stats]{reorder.dendrogram}
 #'
 #' @param k_row an integer scalar with the desired number of groups by which to
 #' color the dendrogram's branches in the rows (uses \link[dendextend]{color_branches})
@@ -132,7 +132,7 @@
 #' @param scale_fill_gradient_fun A function that creates a smooth gradient for the heatmap.
 #' The default uses \link[ggplot2]{scale_fill_gradientn} with the values of colors, limits, and
 #' na.value that are supplied by the user. The user can input a customized function, such as
-#' \link{scale_color_gradient}() in order to get other results (although the virids default
+#' \link[ggplot2]{scale_color_gradient}() in order to get other results (although the virids default
 #' is quite recommended)
 #'
 #' @param grid_color control the color of the heatmap grid. Default is NA.
@@ -266,6 +266,11 @@
 #' @param custom_hovertext Custom hovertext matrix (the same dimensions as the input).
 #' If plot_method is "plotly" then just this text is displayed; if plot_method
 #' if "ggplot" then it is appended to the existing text.
+#'
+#' @param suppress_default_hovertext Logical indicating whether to hide the
+#' default hovertext for plot_method = "ggplot" of row, column, value, and Point
+#' size.
+#'
 #' @param label_format_fun Function to format hovertext (eg,
 #'    \code{function(...) round(..., digits=3)} or
 #'    \code{function(...) format(..., digits=3)}
@@ -427,12 +432,12 @@
 #'
 #'
 #' # Example of removing labels and thus making the plot faster
-#' heatmaply(iris, showticklabels = c(T, F), margins = c(80, 10))
+#' heatmaply(iris, showticklabels = c(TRUE, FALSE), margins = c(80, 10))
 #'
 #' # this is what allows for a much larger matrix to be printed:
 #' set.seed(2017 - 05 - 18)
 #' large_x <- matrix(rnorm(19), 1000, 100)
-#' heatmaply(large_x, dendrogram = F, showticklabels = F, margins = c(1, 1))
+#' heatmaply(large_x, dendrogram = FALSE, showticklabels = FALSE, margins = c(1, 1))
 #' }
 heatmaply <- function(x, ...) {
   UseMethod("heatmaply")
@@ -571,6 +576,7 @@ heatmaply.default <- function(x,
                               label_format_fun = function(...) format(..., digits = 4),
                               labRow = NULL, labCol = NULL,
                               custom_hovertext = NULL,
+                              suppress_default_hovertext = FALSE,
                               col = NULL,
                               dend_hoverinfo = TRUE,
                               side_color_colorbar_len = 0.3,
@@ -601,7 +607,7 @@ heatmaply.default <- function(x,
     r <- range(as.matrix(x), na.rm = TRUE)
     limits <- sort(limits)
 
-  
+
     ## Warn for broken heatmap colors
     if (limits[1] > r[1]) {
       limits[1] <- r[1]
@@ -642,8 +648,8 @@ heatmaply.default <- function(x,
   if (is.logical(dendrogram)) {
     # Using if and not ifelse to make sure the output is a "scalar".
     dendrogram <- if (dendrogram) "both" else "none"
-    # if(T) "both" else "none"
-    # if(F) "both" else "none"
+    # if (TRUE) "both" else "none"
+    # if (FALSE) "both" else "none"
   }
   dendrogram <- match.arg(dendrogram)
 
@@ -757,6 +763,7 @@ heatmaply.default <- function(x,
     scale = scale,
     na.rm = na.rm,
     custom_hovertext = custom_hovertext,
+    suppress_default_hovertext = suppress_default_hovertext,
     labRow = labRow,
     labCol = labCol,
     ...
@@ -807,6 +814,7 @@ heatmaply.default <- function(x,
     node_type = node_type,
     point_size_name = point_size_name,
     label_format_fun = label_format_fun,
+    suppress_default_hovertext = suppress_default_hovertext,
     dend_hoverinfo = dend_hoverinfo,
     side_color_colorbar_len = side_color_colorbar_len,
     plotly_source = plotly_source,
@@ -887,6 +895,7 @@ heatmaply.heatmapr <- function(x,
                                point_size_name = "Point size",
                                label_format_fun = function(...) format(..., digits = 4),
                                custom_hovertext = x[["matrix"]][["custom_hovertext"]],
+                               suppress_default_hovertext = FALSE,
                                dend_hoverinfo = TRUE,
                                side_color_colorbar_len = 0.3,
                                plotly_source = "A",
@@ -1017,6 +1026,7 @@ heatmaply.heatmapr <- function(x,
       point_size_name = point_size_name,
       label_format_fun = label_format_fun,
       custom_hovertext = custom_hovertext,
+      suppress_default_hovertext = suppress_default_hovertext,
       showticklabels = showticklabels
     )
   } else if (plot_method == "plotly") {
@@ -1208,7 +1218,7 @@ heatmaply.heatmapr <- function(x,
     title = main, # layout's title: /r/reference/#layout-title
     xaxis = list( # layout's xaxis is a named list. List of valid keys: /r/reference/#layout-xaxis
       title = xlab # xaxis's title: /r/reference/#layout-xaxis-title
-      # showgrid = T        # xaxis's showgrid: /r/reference/#layout-xaxis-showgrid
+      # showgrid = TRUE        # xaxis's showgrid: /r/reference/#layout-xaxis-showgrid
     ),
     yaxis = list( # layout's yaxis is a named list. List of valid keys: /r/reference/#layout-yaxis
       title = ylab # yaxis's title: /r/reference/#layout-yaxis-title
@@ -1416,7 +1426,7 @@ heatmap_subplot_from_ggplotly <- function(p, px, py, pr, pc,
 
   # s <- subplot(plots,
   #   nrows = nrows,
-  #   widths = if(row_dend_left) rev(widths) else widths,
+  #   widths = if (row_dend_left) rev(widths) else widths,
   #   shareX = TRUE, shareY = TRUE,
   #   titleX = titleX, titleY = titleY,
   #   margin = subplot_margin,
@@ -1436,7 +1446,7 @@ calc_margin <- function(labels, fontsize) {
 #' @title Checks if an object is of class plotly or not.
 #' @export
 #' @description
-#' Helpful for the plot_method in link{heatmaply}.
+#' Helpful for the plot_method in \link{heatmaply}.
 #'
 #' @param x an object to check
 #'
